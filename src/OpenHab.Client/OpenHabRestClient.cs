@@ -116,37 +116,8 @@ namespace OpenHab.Client
         }
     }
 
-    public class ItemsList
+    internal class ItemsList
     {
         public IList<ItemSummary> Item { get; set; }
-    }
-
-    public class ItemSummary
-    {
-        public ItemType Type { get; set; }
-        public string Name { get; set; }
-        public string State { get; set; }
-        public Uri Link { get; set; }
-
-        public IList<ItemSummary> Members { get; set; }
-
-        public override string ToString()
-        {
-            return string.Format("{0} ({1}) = {2}", Name, Type, State);
-        }
-    }
-
-    public enum ItemType
-    {
-        Unknown,
-        GroupItem,
-        ContactItem,
-        SwitchItem,
-        DimmerItem,
-        RollershutterItem,
-        ColorItem,
-        NumberItem,
-        StringItem,
-        DateTimeItem,
     }
 }

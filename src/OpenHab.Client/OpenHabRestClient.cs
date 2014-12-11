@@ -7,7 +7,8 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace OpenHab.Client
 {
@@ -28,14 +29,17 @@ namespace OpenHab.Client
         {
             var httpClientHandler = new HttpClientHandler();
 
-            var client = new HttpClient(httpClientHandler);
+            var httpClient = new HttpClient(httpClientHandler);
+            httpClient.BaseAddress = _baseUri;
 
-            client.BaseAddress = _baseUri;
-            
 
             // Add an Accept header for JSON format.
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            return client;
+            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+
+            // Add an Charset header for Unicode.
+            httpClient.DefaultRequestHeaders.AcceptCharset.Add(new StringWithQualityHeaderValue("utf-8"));
+
+            return httpClient;
         }
 
         private IDictionary<string, string> GetDefaultQueryString()
@@ -103,21 +107,67 @@ namespace OpenHab.Client
             }
         }
 
-        public async Task<IEnumerable<ItemSummary>> GetItems(CancellationToken cancellationToken)
+        public async Task<IEnumerable<Item>> GetItems(CancellationToken cancellationToken)
         {
             var list = await MakeGetRequest<ItemsList>("/rest/items", cancellationToken);
-            return list != null ? list.Item : Enumerable.Empty<ItemSummary>();
+            return list != null ? list.Item : Enumerable.Empty<Item>();
         }
 
-        public async Task<ItemSummary> GetItem(ItemSummary itemSummary, CancellationToken cancellationToken)
+        public async Task<Item> GetItem(Item item, CancellationToken cancellationToken)
         {
-            //TODO: use link
-            return (await MakeGetRequest<ItemSummary>("/rest/items/" + itemSummary.Name, cancellationToken));
+            //TODO: use link ???
+            return (await MakeGetRequest<Item>("/rest/items/" + item.Name, cancellationToken));
+        }
+
+        public async Task<IEnumerable<Sitemap>> GetSitemaps(CancellationToken cancellationToken)
+        {
+            var list = await MakeGetRequest<SitemapList>("/rest/sitemaps", cancellationToken);
+            return list != null ? list.Sitemap : Enumerable.Empty<Sitemap>();
+        }
+
+        public async Task<Page> GetPage(Page page, CancellationToken cancellationToken)
+        {
+            return await MakeGetRequest<Page>(page.Link.PathAndQuery, cancellationToken);
         }
     }
 
     internal class ItemsList
     {
-        public IList<ItemSummary> Item { get; set; }
+        [JsonConverter(typeof(SingleOrArrayConverter<Item>))]
+        public IList<Item> Item { get; set; }
+    }
+
+    internal class SitemapList
+    {
+        [JsonConverter(typeof(SingleOrArrayConverter<Sitemap>))]
+        public IList<Sitemap> Sitemap { get; set; }
+    }
+
+    class SingleOrArrayConverter<T> : JsonConverter
+    {
+        public override bool CanConvert(Type objectType)
+        {
+            return (objectType == typeof(List<T>));
+        }
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        {
+            JToken token = JToken.Load(reader);
+            if (token.Type == JTokenType.Array)
+            {
+                return token.ToObject<List<T>>();
+            }
+            return new List<T> { token.ToObject<T>() };
+        }
+
+        public override bool CanWrite
+        {
+            get { return false; }
+        }
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

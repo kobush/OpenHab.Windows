@@ -3,14 +3,14 @@ using System.Collections.Generic;
 
 namespace OpenHab.Client
 {
-    public class ItemSummary
+    public class Item
     {
         public ItemType Type { get; set; }
         public string Name { get; set; }
         public string State { get; set; }
         public Uri Link { get; set; }
 
-        public IList<ItemSummary> Members { get; set; }
+        public IList<Item> Members { get; set; }
 
         public override string ToString()
         {

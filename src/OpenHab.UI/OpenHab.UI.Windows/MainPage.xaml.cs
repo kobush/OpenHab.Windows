@@ -1,19 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
-
 using OpenHab.Client;
+using Page = Windows.UI.Xaml.Controls.Page;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -46,6 +36,10 @@ namespace OpenHab.UI
             var stringItem = await client.GetItem(items.First(i => i.Type == ItemType.StringItem), cts.Token);
             var contactItem = await client.GetItem(items.First(i => i.Type == ItemType.ContactItem), cts.Token);
             var dateTimeItem = await client.GetItem(items.First(i => i.Type == ItemType.DateTimeItem), cts.Token);
+
+            var sitemaps = await client.GetSitemaps(cts.Token);
+
+            var page = await client.GetPage(sitemaps.First().Homepage, cts.Token);
         }
     }
 }

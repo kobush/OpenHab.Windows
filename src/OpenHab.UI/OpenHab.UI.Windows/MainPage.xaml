@@ -8,6 +8,6 @@
     mc:Ignorable="d">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-
+        <Button Margin="28,22,0,708" Click="Button_Click">Connect!</Button>
     </Grid>
 </Page>

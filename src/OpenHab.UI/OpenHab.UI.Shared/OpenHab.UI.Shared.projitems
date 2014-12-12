@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
@@ -15,5 +15,13 @@
     <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\FrameWidgetViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\GroupWidgetViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\HubPageViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\IWidgetViewModelFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SwitchWidgetViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\TextWidgetViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\WidgetViewModelBase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\WidgetViewModelFactory.cs" />
   </ItemGroup>
 </Project>

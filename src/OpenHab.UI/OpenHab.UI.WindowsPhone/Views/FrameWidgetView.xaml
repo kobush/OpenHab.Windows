@@ -1,0 +1,19 @@
+﻿<UserControl
+    x:Class="OpenHab.UI.Views.FrameWidgetView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:OpenHab.UI.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mvvm="using:Microsoft.Practices.Prism.Mvvm"
+    xmlns:viewModels="using:OpenHab.UI.ViewModels"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400"
+    mvvm:ViewModelLocator.AutoWireViewModel="true" 
+    d:DataContext="{d:DesignInstance viewModels:FrameWidgetViewModel}">
+    
+    <Grid>
+
+    </Grid>
+</UserControl>

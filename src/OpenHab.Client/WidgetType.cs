@@ -3,9 +3,23 @@
     public enum WidgetType
     {
         Unknown,
+
         Frame,
         Group,
-        Switch,
+        Image,
         Text,
+
+        Chart,
+        Color,
+        Contact,
+        List,
+        Number,
+        RollerShutter,
+        Selection,
+        Setpoint,
+        Slider,
+        Switch,
+        Video,
+        WebView
     }
 }

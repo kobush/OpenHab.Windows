@@ -8,6 +8,7 @@
     xmlns:viewModels="using:OpenHab.UI.ViewModels"
     xmlns:ui="using:OpenHab.UI"
     xmlns:views="using:OpenHab.UI.Views"
+    xmlns:helpers="using:OpenHab.UI.Helpers"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mvvm:ViewModelLocator.AutoWireViewModel="true" 
@@ -22,37 +23,76 @@
         <ui:WidgetTemplateSelector x:Key="WidgetTemplateSelector"
                                    FrameWidgetTemplate="{StaticResource FrameWidgetTemplate}"
                                    />
+
+        <helpers:CaseConverter x:Key="CaseConverter" />
+
+        <DataTemplate x:Key="HubHeaderTemplate" >
+            <TextBlock Text="{Binding Converter={StaticResource CaseConverter}}"/>
+        </DataTemplate>
+
+        <DataTemplate x:Key="HubSectionTemplate">
+            <StackPanel>
+
+                <ListView  ItemsSource="{Binding Widgets}" 
+                           IsItemClickEnabled="False"
+                           ContinuumNavigationTransitionInfo.ExitElementContainer="True">
+                    
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="#FF1F1F1F" Padding="6,4" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <Image Stretch="None" Width="32" Height="32" Margin="0,6,6,6" VerticalAlignment="Center">
+                                        <Image.Source>                                            <BitmapImage UriSource="{Binding IconUrl}" />                                        </Image.Source>
+                                    </Image>
+                                    
+                                    <TextBlock Text="{Binding Label}" Style="{StaticResource ListViewItemTextBlockStyle}" Grid.Column="1" FontSize="26" VerticalAlignment="Center" />
+                                    <Grid Grid.Column="2" Width="32">
+                                        <Path Width="20" Height="22.5" Stretch="Fill" Fill="#99FFFFFF" Data="F1 M 39.8307,37.6042L 36.6641,34.4375L 25.1849,23.3542L 35.4766,23.3542L 50.5182,37.6042L 35.4766,51.8542L 25.1849,51.8542L 36.6641,40.7708L 39.8307,37.6042 Z " UseLayoutRounding="False" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+
+                </ListView>
+
+            </StackPanel>
+        </DataTemplate>
+        
+
     </Page.Resources>
     
     <Page.BottomAppBar>
         <CommandBar>
-            <AppBarButton Command="{Binding ConnectCommand}" 
-                          Label="Connect" Icon="Refresh"/>
+            <CommandBar.SecondaryCommands>
+                <AppBarButton Command="{Binding HomeCommand}" 
+                          Label="home" Icon="Home"/>
+                <AppBarButton Command="{Binding ConnectCommand}" 
+                          Label="refresh" Icon="Refresh"/>
+                <AppBarButton Command="{Binding SettingsCommand}" 
+                          Label="settings" Icon="Setting"/>
+            </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>
 
-    <StackPanel Margin="10">
+    <Grid x:Name="LayoutRoot">
+        <Hub x:Name="Hub" x:Uid="Hub" Header="openHAB"
+             helpers:HubBinder.DataSource="{Binding Widgets}"
+             helpers:HubBinder.HeaderTemplate="{StaticResource HubHeaderTemplate}"
+             helpers:HubBinder.SectionTemplate="{StaticResource HubSectionTemplate}">
+            
+        </Hub>
+    </Grid>
 
-        <TextBlock Text="{Binding PageTitle}" 
-                   Style="{StaticResource HeaderTextBlockStyle}"/>
-
-        <ItemsControl ItemsSource="{Binding Widgets}">
-                      <!--ItemTemplateSelector="{StaticResource WidgetTemplateSelector}">-->
-            <ItemsControl.ItemsPanel>
-                <ItemsPanelTemplate>
-                    <StackPanel Orientation="Vertical"/>
-                </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
-            <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                    <Border BorderThickness="1" BorderBrush="White" Margin="0,0,0,5">
-                        <Grid>
-                            <TextBlock Text="{Binding Label}" Margin="10"
-                                       Style="{StaticResource TitleTextBlockStyle}"/>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ItemsControl.ItemTemplate>
-        </ItemsControl>
-    </StackPanel>
 </Page>

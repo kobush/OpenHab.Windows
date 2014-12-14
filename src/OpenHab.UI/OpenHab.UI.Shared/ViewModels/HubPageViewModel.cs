@@ -17,7 +17,7 @@ namespace OpenHab.UI.ViewModels
         private DelegateCommand _connectCommand;
 
         private string _pageTitle;
-        private ObservableCollection<WidgetViewModelBase> _widgets = new ObservableCollection<WidgetViewModelBase>();
+        private IEnumerable<WidgetViewModelBase> _widgets;
 
         public HubPageViewModel(IWidgetViewModelFactory widgetViewModelFactory)
         {
@@ -46,14 +46,15 @@ namespace OpenHab.UI.ViewModels
         {
             PageTitle = page.Title;
 
-            _widgets.Clear();
+            var widgets = new List<WidgetViewModelBase>();
             foreach (var widget in page.Widgets)
             {
                 var widgetViewModel = _widgetViewModelFactory.Create(widget.Type);
                 widgetViewModel.Set(widget);
-
-                _widgets.Add(widgetViewModel);
+                widgets.Add(widgetViewModel);
             }
+
+            Widgets = widgets;
         }
 
         public string PageTitle
@@ -65,6 +66,7 @@ namespace OpenHab.UI.ViewModels
         public IEnumerable<WidgetViewModelBase> Widgets
         {
             get { return _widgets; }
+            private set { SetProperty(ref _widgets, value); }
         }
     }
 }

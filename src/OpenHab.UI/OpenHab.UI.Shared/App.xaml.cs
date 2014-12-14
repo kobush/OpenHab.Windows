@@ -48,6 +48,7 @@ namespace OpenHab.UI
          //   _container.RegisterInstance<IResourceLoader>(new ResourceLoaderAdapter(new ResourceLoader()));
 
             _container.RegisterType<IWidgetViewModelFactory, WidgetViewModelFactory>(new ContainerControlledLifetimeManager());
+            _container.RegisterType<IIconUrlProvider, IconUrlProvider>(new ContainerControlledLifetimeManager());
 
             ViewModelLocationProvider.SetDefaultViewModelFactory(Resolve);
 

@@ -1,33 +1,39 @@
 ﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using OpenHab.UI.Helpers;
 
 namespace OpenHab.UI.ViewModels
 {
-    public class FrameWidgetViewModel : WidgetViewModelBase
+    public class FrameWidgetViewModel : WidgetViewModelBase, IHubData
     {
         private readonly IWidgetViewModelFactory _widgetViewModelFactory;
-        
-        private ObservableCollection<WidgetViewModelBase> _widgets = new ObservableCollection<WidgetViewModelBase>();
+
+        private IEnumerable<WidgetViewModelBase> _widgets;
 
         public FrameWidgetViewModel(IWidgetViewModelFactory widgetViewModelFactory)
         {
             _widgetViewModelFactory = widgetViewModelFactory;
         }
 
+        // provides text to display as hub header
+        object IHubData.Header { get { return Label ?? ""; } }
+
         public IEnumerable<WidgetViewModelBase> Widgets
         {
             get { return _widgets; }
+            private set { SetProperty(ref _widgets, value); }
         }
 
         protected override void OnModelUpdated()
         {
-            _widgets.Clear();
+            var widgets = new List<WidgetViewModelBase>();
             foreach (var childWidget in Widget.Widgets)
             {
                 var childViewModel = _widgetViewModelFactory.Create(childWidget.Type);
                 childViewModel.Set(childWidget);
-                _widgets.Add(childViewModel);
+                widgets.Add(childViewModel);
             }
+
+            Widgets = widgets;
         }
     }
 }

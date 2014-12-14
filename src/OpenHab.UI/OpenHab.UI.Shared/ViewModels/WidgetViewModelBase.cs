@@ -1,4 +1,7 @@
-﻿using Microsoft.Practices.Prism.Mvvm;
+﻿using System;
+using System.Runtime.InteropServices.ComTypes;
+using Microsoft.Practices.Prism.Mvvm;
+using Microsoft.Practices.Unity;
 using OpenHab.Client;
 
 namespace OpenHab.UI.ViewModels
@@ -8,12 +11,17 @@ namespace OpenHab.UI.ViewModels
         private Widget _widget;
         private string _icon;
         private string _label;
+        private Uri _iconUrl;
+
+        [Dependency]
+        public IIconUrlProvider IconUrlProvider { get; set; }
 
         public void Set(Widget widget)
         {
             _widget = widget;
-            Icon = _widget.Icon;
+
             Label = _widget.Label;
+            Icon = _widget.Icon;
 
             OnModelUpdated();
         }
@@ -32,9 +40,25 @@ namespace OpenHab.UI.ViewModels
         public string Icon
         {
             get { return _icon; }
-            protected set { SetProperty(ref _icon, value); }
+            protected set
+            {
+                if (SetProperty(ref _icon, value))
+                {
+                    if (IconUrlProvider != null)
+                        IconUrl = IconUrlProvider.ResolveIconUrl(Icon);
+                }
+
+            }
+        }
+
+        public Uri IconUrl
+        {
+            get { return _iconUrl; }
+            private set { SetProperty(ref _iconUrl, value); }
         }
 
         protected abstract void OnModelUpdated();
     }
+
+
 }

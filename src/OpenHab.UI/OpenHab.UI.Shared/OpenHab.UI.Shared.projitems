@@ -15,11 +15,16 @@
     <Compile Include="$(MSBuildThisFileDirectory)App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\CaseConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\HubBinder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\Settings.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\SettingsManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\FrameWidgetViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\GroupWidgetViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\HubPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\IIconUrlProvider.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\IWidgetViewModelFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SettingsPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SwitchWidgetViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\TextWidgetViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\WidgetViewModelBase.cs" />

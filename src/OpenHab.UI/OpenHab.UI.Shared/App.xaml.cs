@@ -9,6 +9,7 @@ using Microsoft.Practices.Prism.PubSubEvents;
 using Microsoft.Practices.Prism.StoreApps;
 using Microsoft.Practices.Prism.StoreApps.Interfaces;
 using Microsoft.Practices.Unity;
+using OpenHab.UI.Services;
 using OpenHab.UI.ViewModels;
 
 namespace OpenHab.UI
@@ -47,6 +48,7 @@ namespace OpenHab.UI
             _container.RegisterInstance<IEventAggregator>(EventAggregator); 
          //   _container.RegisterInstance<IResourceLoader>(new ResourceLoaderAdapter(new ResourceLoader()));
 
+            _container.RegisterType<ISettingsManager, SettingsManager>(new ContainerControlledLifetimeManager());
             _container.RegisterType<IWidgetViewModelFactory, WidgetViewModelFactory>(new ContainerControlledLifetimeManager());
             _container.RegisterType<IIconUrlProvider, IconUrlProvider>(new ContainerControlledLifetimeManager());
 

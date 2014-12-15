@@ -8,7 +8,7 @@ namespace OpenHab.UI.Services
     {
         public string Hostname { get; set; }
 
-        public int PortNumber { get; set; }
+        public int? PortNumber { get; set; }
 
         public bool UseHttps { get; set; }
 
@@ -19,9 +19,16 @@ namespace OpenHab.UI.Services
         public string Sitemap { get; set; }
 
 
-        public Uri ResolveRestApiUri()
+        public Uri ResolveBaseUri()
         {
-            return null;
+            var scheme = UseHttps ? "https" : "http";
+            UriBuilder builder;
+            if (PortNumber.HasValue)
+                builder = new UriBuilder(scheme, Hostname, PortNumber.Value);
+            else
+                builder = new UriBuilder(scheme, Hostname);
+
+            return builder.Uri;
         }
 
         public Uri ResolveIconUri(string iconName)

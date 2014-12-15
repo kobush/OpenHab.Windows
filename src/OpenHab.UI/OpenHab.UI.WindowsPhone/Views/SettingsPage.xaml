@@ -13,9 +13,12 @@
     d:DataContext="{d:DesignInstance viewModels:SettingsPageViewModel}">
 
     <Page.BottomAppBar>
-        <CommandBar ClosedDisplayMode="Minimal">
+        <CommandBar >
             <CommandBar.PrimaryCommands>
-                <AppBarButton Label="save" Icon="Accept"/>
+                <AppBarButton Label="find server" Icon="Find" IsCompact="True"
+                              Command="{Binding FindServerCommand}" />
+                <AppBarButton Label="save" Icon="Save" IsCompact="True"
+                              Command="{Binding SaveSettingsCommand}"/>
             </CommandBar.PrimaryCommands>
         </CommandBar>
     </Page.BottomAppBar>
@@ -35,28 +38,51 @@
                       VerticalScrollBarVisibility="Auto">
 
             <StackPanel >
-                <TextBox Header="Hostname or IP address:" PlaceholderText="Enter hostname" InputScope="Url"/>
-                <TextBox Header="Port number (e.g. 8080):" PlaceholderText="Enter port number" InputScope="Number"/>
+                <TextBox Header="Hostname or IP address" 
+                         PlaceholderText="Enter hostname" InputScope="Url" MaxLength="100"
+                         IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
+                         Text="{Binding Hostname, Mode=TwoWay}"/>
+                
+                <TextBox Header="Port number (e.g. 8080)" 
+                         PlaceholderText="Enter port number" InputScope="Number" MaxLength="10"
+                         IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
+                         Text="{Binding PortNumber, Mode=TwoWay}"/>
 
-                <ToggleSwitch x:Name="UseAuthenticationSwitch" Header="Use authentication:" OnContent="On" OffContent="Off"></ToggleSwitch>
-                <TextBox Header="User name:" PlaceholderText="Enter user name" 
-                         IsEnabled="{Binding ElementName=UseAuthenticationSwitch}"/>
-                <PasswordBox Header="Password:" PlaceholderText="Enter password" 
-                             IsEnabled="{Binding ElementName=UseAuthenticationSwitch}"/>
+                <ToggleSwitch x:Name="UseAuthenticationSwitch" 
+                              Header="Use authentication" 
+                              OnContent="On" OffContent="Off"
+                              IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
+                              IsOn="{Binding UseAuthentication, Mode=TwoWay}"/>
+                
+                <TextBox Header="User name" PlaceholderText="Enter user name" 
+                         Text="{Binding Username, Mode=TwoWay}" MaxLength="100"
+                         IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
+                         Visibility="{Binding UseAuthentication, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                
+                <PasswordBox Header="Password" PlaceholderText="Enter password" 
+                             Password="{Binding Password, Mode=TwoWay}" MaxLength="100"
+                             IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
+                             Visibility="{Binding UseAuthentication, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-                <ToggleSwitch Header="Connection type:" OnContent="HTTPS" OffContent="HTTP"></ToggleSwitch>
+                <ToggleSwitch Header="Connection type" OnContent="HTTPS" OffContent="HTTP"
+                              IsOn="{Binding UseHttps, Mode=TwoWay}"
+                              IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"/>
 
                 <StackPanel Orientation="Horizontal">
-                    <Button Content="test connection" />
-                    <TextBlock x:Name="TestConnectionMessage" 
-                               Text="Connecting..." 
+                    <Button Content="test connection" Command="{Binding TestConnectionCommand}" />
+                    <TextBlock Text="{Binding ConnectionMessage}" 
                                Margin="12,11,0,12" VerticalAlignment="Center"
-                               Style="{StaticResource BodyTextBlockStyle}" 
-                               />
+                               Style="{StaticResource BodyTextBlockStyle}" />
                 </StackPanel>
-                <ProgressBar IsIndeterminate="True" />
+                
+                <ProgressBar IsIndeterminate="{Binding IsConnecting}" 
+                             Visibility="{Binding IsConnecting, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-                <ComboBox Header="Sitemap:" PlaceholderText="Select sitemap" ></ComboBox>
+                <ComboBox Header="Sitemap" PlaceholderText="Select sitemap" 
+                          ItemsSource="{Binding Sitemaps}" DisplayMemberPath="name" 
+                          SelectedValue="{Binding Sitemap, Mode=TwoWay}"
+                          SelectedValuePath="name"/>
+                
             </StackPanel>
 
         </ScrollViewer>

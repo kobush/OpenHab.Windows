@@ -1,25 +1,25 @@
 ﻿using System;
 using System.Globalization;
+using Windows.UI.Xaml;
 using Coding4Fun.Toolkit.Controls.Converters;
 
 namespace OpenHab.UI.Helpers
 {
-    public class CaseConverter : ValueConverter
+    public class BooleanToVisibilityConverter : ValueConverter
     {
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture, string language)
         {
-            string text = value as string;
-            if (text != null)
-            {
-                return text.ToUpper();
-            }
+            var boolValue = System.Convert.ToBoolean(value);
 
-            return "";
+            if (parameter != null)
+                boolValue = !boolValue;
+
+            return boolValue ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public override object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture, string language)
         {
-            throw new NotImplementedException();
+            return value.Equals(Visibility.Visible);
         }
     }
 }

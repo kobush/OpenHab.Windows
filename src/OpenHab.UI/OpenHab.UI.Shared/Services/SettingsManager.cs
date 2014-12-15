@@ -26,16 +26,16 @@ namespace OpenHab.UI.Services
         {
             try
             {
-                _localSettings.CreateContainer(DefaultContainerKey, ApplicationDataCreateDisposition.Existing);
                 if (!_localSettings.Containers.ContainsKey(DefaultContainerKey))
                 {
                     return null;
                 }
 
-                var settings = new Settings();
+                _localSettings.CreateContainer(DefaultContainerKey, ApplicationDataCreateDisposition.Existing);
                 var container = _localSettings.Containers[DefaultContainerKey];
 
-                settings.Hostname = (string) container.Values["hostname"];
+                var settings = new Settings();
+                settings.Hostname = (string)container.Values["hostname"];
                 settings.PortNumber = (int) container.Values["port"];
                 settings.Sitemap = (string) container.Values["sitemap"];
                 settings.UseHttps = (bool) container.Values["useHttps"];
@@ -43,14 +43,19 @@ namespace OpenHab.UI.Services
 
                 if (!string.IsNullOrEmpty(settings.Username))
                 {
-
+                    var credential = _passwordVault.Retrieve("openhab", settings.Username);
+                    if (credential != null)
+                    {
+                        credential.RetrievePassword();
+                        settings.Password = credential.Password;
+                    }
                 }
 
                 return settings;
             }
             catch (Exception ex)
             {
-                //TODO:
+                //TODO: add logging
             }
             return null;
         }

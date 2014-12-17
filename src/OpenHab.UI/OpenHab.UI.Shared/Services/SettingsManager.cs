@@ -1,25 +1,40 @@
 ﻿using System;
 using Windows.Security.Credentials;
 using Windows.Storage;
+using Microsoft.Practices.Prism.PubSubEvents;
 
 namespace OpenHab.UI.Services
 {
     public interface ISettingsManager
     {
         Settings LoadSettings();
+
         void SaveSettings(Settings settings);
+
+        Settings CurrentSettings { get; }
     }
 
     public class SettingsManager : ISettingsManager
     {
+        private readonly IEventAggregator _eventAggregator;
         private readonly ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
         private readonly PasswordVault _passwordVault = new PasswordVault();
         
+        private Settings _currentSettings;
+
         private const string DefaultContainerKey = "defaultSettings";
 
-        public SettingsManager()
+        public SettingsManager(IEventAggregator eventAggregator)
         {
-            
+            _eventAggregator = eventAggregator;
+        }
+
+        public Settings CurrentSettings 
+        {
+            get
+            {
+                return (_currentSettings) ?? (_currentSettings = LoadSettings());
+            }
         }
 
         public Settings LoadSettings()
@@ -84,6 +99,8 @@ namespace OpenHab.UI.Services
                         //TODO: handle
                     }
                 }
+
+                _eventAggregator.GetEvent<SettingsChangedEvent>().Publish(settings);
             }
             catch (Exception ex)
             {
@@ -92,4 +109,7 @@ namespace OpenHab.UI.Services
         }
 
     }
+
+    public class SettingsChangedEvent : PubSubEvent<Settings>
+    { }
 }

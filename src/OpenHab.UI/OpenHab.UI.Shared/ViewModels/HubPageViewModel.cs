@@ -8,6 +8,7 @@ using Windows.UI.Xaml.Navigation;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Mvvm;
 using Microsoft.Practices.Prism.Mvvm.Interfaces;
+using Microsoft.Practices.Prism.PubSubEvents;
 using OpenHab.Client;
 using OpenHab.UI.Services;
 
@@ -23,10 +24,11 @@ namespace OpenHab.UI.ViewModels
         private readonly ISettingsManager _settingsManager;
         private readonly INavigationService _navigationService;
         private readonly IWidgetViewModelFactory _widgetViewModelFactory;
+        private readonly IEventAggregator _eventAggregator;
 
         private DelegateCommand _connectCommand;
         private DelegateCommand _settingsCommand;
-        private DelegateCommand _homePageCommand;
+        private DelegateCommand _homepageCommand;
 
         private string _pageTitle;
         private IEnumerable<WidgetViewModelBase> _widgets;
@@ -34,15 +36,18 @@ namespace OpenHab.UI.ViewModels
         private HubPageParameters _parameters;
         private bool _isLoading;
         private string _lastUpdateTime;
+        private bool _isHomepage;
 
         public HubPageViewModel(
             ISettingsManager settingsManager,
             INavigationService navigationService,
-            IWidgetViewModelFactory widgetViewModelFactory)
+            IWidgetViewModelFactory widgetViewModelFactory,
+            IEventAggregator eventAggregator)
         {
             _settingsManager = settingsManager;
             _navigationService = navigationService;
             _widgetViewModelFactory = widgetViewModelFactory;
+            _eventAggregator = eventAggregator;
         }
 
         public ICommand ConnectCommand
@@ -54,9 +59,15 @@ namespace OpenHab.UI.ViewModels
         {
             get { return (_settingsCommand) ?? (_settingsCommand = new DelegateCommand(OpenSettingsPage)); }
         }
-        public object HomePageCommand
+        public object HomepageCommand
         {
-            get { return (_homePageCommand) ?? (_homePageCommand = new DelegateCommand(OpenHomePage)); }
+            get { return (_homepageCommand) ?? (_homepageCommand = new DelegateCommand(OpenHomePage)); }
+        }
+
+        public bool IsHomepage
+        {
+            get { return _isHomepage; }
+            protected set { SetProperty(ref _isHomepage, value); }
         }
 
         public string PageTitle
@@ -88,6 +99,10 @@ namespace OpenHab.UI.ViewModels
             base.OnNavigatedTo(navigationParameter, navigationMode, viewModelState);
 
             _parameters = navigationParameter as HubPageParameters;
+            IsHomepage = (_parameters == null || _parameters.IsHomepage);
+
+            _eventAggregator.GetEvent<SettingsChangedEvent>()
+                .Subscribe(OnSettingsChanged, ThreadOption.UIThread, false);
 
             LoadPage();
         }
@@ -102,11 +117,19 @@ namespace OpenHab.UI.ViewModels
                 _loadingCancellationTokenSource = null;
             }
 
+            _eventAggregator.GetEvent<SettingsChangedEvent>()
+                .Unsubscribe(OnSettingsChanged);
         }
+
+        private void OnSettingsChanged(Settings settings)
+        {
+
+        }
+
 
         private void LoadPage()
         {
-            var settings = _settingsManager.LoadSettings();
+            var settings = _settingsManager.CurrentSettings;
             if (settings == null)
             {
                 //TODO: display error or navigate to config
@@ -114,10 +137,9 @@ namespace OpenHab.UI.ViewModels
             }
 
             var baseUri = settings.ResolveBaseUri();
-
             var client = new OpenHabRestClient(baseUri);
 
-            _loadingCancellationTokenSource = new System.Threading.CancellationTokenSource();
+            _loadingCancellationTokenSource = new CancellationTokenSource();
 
             IsLoading = true;
             Task.Run(async () =>
@@ -127,7 +149,7 @@ namespace OpenHab.UI.ViewModels
                     allSitempas.FirstOrDefault();
 
                 Page page = null;
-                if (_parameters == null || _parameters.IsHomepage)
+                if (IsHomepage)
                     page = (await client.GetPage(sitemap.Homepage, _loadingCancellationTokenSource.Token));
                 
                 //TODO: load other page
@@ -168,12 +190,12 @@ namespace OpenHab.UI.ViewModels
 
         private void OpenSettingsPage()
         {
-            _navigationService.Navigate("Settings", null);
+            _navigationService.Navigate(PageToken.Settings, null);
         }
 
         private void OpenHomePage()
         {
-
+            _navigationService.Navigate(PageToken.Hub, new HubPageParameters{IsHomepage = true});
         }
     }
 }

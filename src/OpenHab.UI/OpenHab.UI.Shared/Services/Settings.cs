@@ -31,9 +31,9 @@ namespace OpenHab.UI.Services
             return builder.Uri;
         }
 
-        public Uri ResolveIconUri(string iconName)
+        public Uri ResolveIconUrl(string iconName)
         {
-            return null;
+            return new Uri(ResolveBaseUri(), string.Format("/images/{0}.png", iconName));
         }
     }
 }

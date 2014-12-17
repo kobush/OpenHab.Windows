@@ -25,7 +25,7 @@ namespace OpenHab.UI
     public sealed partial class App : MvvmAppBase
     {
         private readonly IUnityContainer _container = new UnityContainer();
-        private readonly IEventAggregator _eventAggregator = new EventAggregator();
+        private IEventAggregator _eventAggregator;
 
         private TransitionCollection _transitions;
 
@@ -92,6 +92,9 @@ namespace OpenHab.UI
 
         protected override Task OnInitializeAsync(IActivatedEventArgs args)
         {
+            // must be initialized on UI thread
+            _eventAggregator = new EventAggregator();
+
             _container.RegisterInstance<INavigationService>(NavigationService);
             _container.RegisterInstance<ISessionStateService>(SessionStateService);
             _container.RegisterInstance<IEventAggregator>(EventAggregator);
@@ -99,7 +102,6 @@ namespace OpenHab.UI
 
             _container.RegisterType<ISettingsManager, SettingsManager>(new ContainerControlledLifetimeManager());
             _container.RegisterType<IWidgetViewModelFactory, WidgetViewModelFactory>(new ContainerControlledLifetimeManager());
-            _container.RegisterType<IIconUrlProvider, IconUrlProvider>(new ContainerControlledLifetimeManager());
 
             ViewModelLocationProvider.SetDefaultViewModelFactory(Resolve);
 

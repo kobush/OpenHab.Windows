@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Runtime.InteropServices.ComTypes;
 using Microsoft.Practices.Prism.Mvvm;
 using Microsoft.Practices.Unity;
 using OpenHab.Client;
+using OpenHab.UI.Services;
 
 namespace OpenHab.UI.ViewModels
 {
@@ -14,7 +14,7 @@ namespace OpenHab.UI.ViewModels
         private Uri _iconUrl;
 
         [Dependency]
-        public IIconUrlProvider IconUrlProvider { get; set; }
+        public ISettingsManager SettingsManager { get; set; }
 
         public void Set(Widget widget)
         {
@@ -44,10 +44,16 @@ namespace OpenHab.UI.ViewModels
             {
                 if (SetProperty(ref _icon, value))
                 {
-                    if (IconUrlProvider != null)
-                        IconUrl = IconUrlProvider.ResolveIconUrl(Icon);
+                    if (SettingsManager != null && !string.IsNullOrEmpty(_icon))
+                    {
+                        var settings = SettingsManager.CurrentSettings;
+                        IconUrl = (settings != null) ? settings.ResolveIconUrl(Icon) : null;
+                    }
+                    else
+                    {
+                        IconUrl = null;
+                    }
                 }
-
             }
         }
 

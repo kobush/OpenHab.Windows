@@ -79,12 +79,16 @@
     <Page.BottomAppBar>
         <CommandBar>
             <CommandBar.PrimaryCommands>
+                
                 <AppBarButton Command="{Binding ConnectCommand}" 
                           Label="refresh" Icon="Refresh" IsCompact="True"/>
             </CommandBar.PrimaryCommands>
             <CommandBar.SecondaryCommands>
-                <AppBarButton Command="{Binding HomePageCommand}" 
-                          Label="home page" Icon="Home"/>
+                
+                <AppBarButton Command="{Binding HomepageCommand}" 
+                              Label="homepage" Icon="Home"
+                              Visibility="{Binding IsHomepage, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                
                 <AppBarButton Command="{Binding SettingsCommand}" 
                           Label="settings" Icon="Setting"/>
             </CommandBar.SecondaryCommands>
@@ -97,7 +101,7 @@
 
             <helpers:ProgressBehavior 
                 IsVisible="{Binding IsLoading}"
-                Text="Loading"/>
+                Text="Loading..."/>
         </interactivity:Interaction.Behaviors>
         
 

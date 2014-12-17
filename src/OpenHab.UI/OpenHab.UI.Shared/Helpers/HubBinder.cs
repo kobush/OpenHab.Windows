@@ -69,9 +69,12 @@ namespace OpenHab.UI.Helpers
         {
             var data = e.NewValue as IEnumerable;
             var hub = d as Hub;
+
+            if (data == null || hub == null) return;
+            hub.Sections.Clear();
+
             var template = GetSectionTemplate(hub);
             var header = GetHeaderTemplate(hub);
-            if (data == null || hub == null) return;
             foreach (var section in data)
             {
                 var sect = new HubSection { DataContext = section, ContentTemplate = template, HeaderTemplate = header };

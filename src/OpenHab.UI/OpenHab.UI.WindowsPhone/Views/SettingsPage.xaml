@@ -7,6 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mvvm="using:Microsoft.Practices.Prism.Mvvm"
     xmlns:viewModels="using:OpenHab.UI.ViewModels"
+    xmlns:helpers="using:OpenHab.UI.Helpers"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mvvm:ViewModelLocator.AutoWireViewModel="true" 
@@ -15,8 +16,8 @@
     <Page.BottomAppBar>
         <CommandBar >
             <CommandBar.PrimaryCommands>
-                <AppBarButton Label="find server" Icon="Find" IsCompact="True"
-                              Command="{Binding FindServerCommand}" />
+                <!--<AppBarButton Label="discover" Icon="Find" IsCompact="True"
+                              Command="{Binding DiscoverServerCommand}" />-->
                 <AppBarButton Label="save" Icon="Save" IsCompact="True"
                               Command="{Binding SaveSettingsCommand}"/>
             </CommandBar.PrimaryCommands>
@@ -79,12 +80,35 @@
                              Visibility="{Binding IsConnecting, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
                 <ComboBox Header="Sitemap" PlaceholderText="Select sitemap" 
-                          ItemsSource="{Binding Sitemaps}" DisplayMemberPath="name" 
+                          ItemsSource="{Binding Sitemaps}" DisplayMemberPath="Name" 
                           SelectedValue="{Binding Sitemap, Mode=TwoWay}"
-                          SelectedValuePath="name"/>
+                          SelectedValuePath="Name"/>
                 
             </StackPanel>
 
         </ScrollViewer>
+        
+        <ContentDialog helpers:ContentDialogHelper.IsOpen="{Binding ShowDiscoverPopup, Mode=TwoWay}"
+                       FullSizeDesired="True" Title="Server discovery"
+                       PrimaryButtonText="OK"
+                       IsPrimaryButtonEnabled="{Binding IsSearching, Converter={StaticResource BooleanInverseConverter}}"
+                       PrimaryButtonCommand="{Binding DiscoverAcceptCommand}"
+                       SecondaryButtonText="Cancel" 
+                       SecondaryButtonCommand="{Binding DiscoverCancelCommand}">
+
+            <StackPanel Margin="12">
+                    
+                <TextBlock Text="{Binding DiscoverMessage}"  
+                           TextWrapping="Wrap" Style="{StaticResource BaseTextBlockStyle}" />
+                    
+                <ProgressRing IsActive="{Binding IsSearching}" Margin="0,140,0,0" HorizontalAlignment="Center" Background="Transparent"
+                              Visibility="{Binding IsSearching, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    
+                <ListBox ItemsSource="{Binding DiscoveredServers}"/>
+                    
+            </StackPanel>
+
+
+        </ContentDialog>
     </Grid>
 </Page>

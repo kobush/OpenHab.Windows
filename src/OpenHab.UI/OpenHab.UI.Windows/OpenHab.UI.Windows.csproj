@@ -127,6 +127,7 @@
     <Content Include="Assets\SmallLogo.scale-100.png" />
     <Content Include="Assets\SplashScreen.scale-100.png" />
     <Content Include="Assets\StoreLogo.scale-100.png" />
+    <Content Include="ReadMe.Coding4Fun.Toolkit.txt" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="MainPage.xaml">
@@ -135,6 +136,12 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Coding4Fun.Toolkit">
+      <HintPath>..\..\packages\Coding4Fun.Toolkit.Controls.2.0.8\lib\netcore451\Coding4Fun.Toolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="Coding4Fun.Toolkit.Controls">
+      <HintPath>..\..\packages\Coding4Fun.Toolkit.Controls.2.0.8\lib\netcore451\Coding4Fun.Toolkit.Controls.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Practices.Prism.Mvvm">
       <HintPath>..\..\packages\Prism.Mvvm.1.1.1\lib\windows8\Microsoft.Practices.Prism.Mvvm.dll</HintPath>
     </Reference>
@@ -175,6 +182,9 @@
     </Reference>
     <Reference Include="System.Net.Http.Primitives">
       <HintPath>..\..\packages\Microsoft.Net.Http.2.2.22\lib\win8\System.Net.Http.Primitives.dll</HintPath>
+    </Reference>
+    <Reference Include="Zeroconf">
+      <HintPath>..\..\packages\Zeroconf.2.3\lib\portable-win81+wpa81\Zeroconf.dll</HintPath>
     </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">

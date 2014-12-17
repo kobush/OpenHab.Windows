@@ -1,23 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using Windows.Networking;
 using Windows.UI.Xaml.Navigation;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Mvvm;
+using Microsoft.Practices.Prism.Mvvm.Interfaces;
 using OpenHab.Client;
 using OpenHab.UI.Services;
+using Zeroconf;
 
 namespace OpenHab.UI.ViewModels
 {
     public class SettingsPageViewModel : ViewModel
     {
         private readonly ISettingsManager _settingsManager;
+        private readonly INavigationService _navigationService;
 
         private DelegateCommand _testConnectionCommand;
         private DelegateCommand _saveSettingsCommand;
+        private DelegateCommand _discoverServerCommand;
+        private DelegateCommand _discoverCancelCommand;
+        private DelegateCommand _discoverAcceptCommand;
 
         private Settings _lastSettings;
         
@@ -28,16 +35,23 @@ namespace OpenHab.UI.ViewModels
         private string _username;
         private string _password;
         private string _sitemap;
+        private IEnumerable<Sitemap> _sitemaps;
 
         private CancellationTokenSource _testConnectionCancellationTokenSource;
-        private IEnumerable<Sitemap> _sitemaps;
         private bool _isConnecting;
         private string _connectionMessage;
 
+        private CancellationTokenSource _discoverCancellationTokenSource;
+        private string _discoverMessage;
+        private bool _isSearching;
+        private bool _showDiscoverPopup;
+        private IEnumerable<IZeroconfHost> _discoveredServers;
 
-        public SettingsPageViewModel(ISettingsManager settingsManager)
+
+        public SettingsPageViewModel(ISettingsManager settingsManager, INavigationService navigationService)
         {
             _settingsManager = settingsManager;
+            _navigationService = navigationService;
         }
 
         public ICommand TestConnectionCommand
@@ -48,6 +62,20 @@ namespace OpenHab.UI.ViewModels
         public ICommand SaveSettingsCommand
         {
             get { return (_saveSettingsCommand) ?? (_saveSettingsCommand = new DelegateCommand(SaveSettings)); }
+        }
+
+        public ICommand DiscoverServerCommand
+        {
+            get { return (_discoverServerCommand) ?? (_discoverServerCommand = new DelegateCommand(DiscoverServer)); }
+        }
+
+        public ICommand DiscoverCancelCommand
+        {
+            get { return (_discoverCancelCommand) ?? (_discoverCancelCommand = new DelegateCommand(CloseDiscoverDialog)); }
+        }
+        public ICommand DiscoverAcceptCommand
+        {
+            get { return (_discoverAcceptCommand) ?? (_discoverAcceptCommand = new DelegateCommand(AcceptDiscoverServer)); }
         }
 
         public string Hostname
@@ -110,6 +138,30 @@ namespace OpenHab.UI.ViewModels
             private set { SetProperty(ref _connectionMessage, value); }
         }
 
+        public string DiscoverMessage
+        {
+            get { return _discoverMessage; }
+            private set { SetProperty(ref _discoverMessage, value); }
+        }
+
+        public bool IsSearching
+        {
+            get { return _isSearching; }
+            private set { SetProperty(ref _isSearching, value); }
+        }
+
+        public bool ShowDiscoverPopup
+        {
+            get { return _showDiscoverPopup; }
+            set { SetProperty(ref _showDiscoverPopup, value); }
+        }
+
+        public IEnumerable<IZeroconfHost> DiscoveredServers
+        {
+            get { return _discoveredServers; }
+            private set { SetProperty(ref _discoveredServers, value); }
+        }
+
         public override void OnNavigatedTo(object navigationParameter, NavigationMode navigationMode, Dictionary<string, object> viewModelState)
         {
             base.OnNavigatedTo(navigationParameter, navigationMode, viewModelState);
@@ -136,7 +188,16 @@ namespace OpenHab.UI.ViewModels
 
             // cancel connection
             if (_testConnectionCancellationTokenSource != null)
+            {
                 _testConnectionCancellationTokenSource.Cancel();
+                _testConnectionCancellationTokenSource = null;
+            }
+
+            if (_discoverCancellationTokenSource != null)
+            {
+                _discoverCancellationTokenSource.Cancel();
+                _discoverCancellationTokenSource = null;
+            }
         }
 
 
@@ -178,7 +239,7 @@ namespace OpenHab.UI.ViewModels
                     }
 
                     ConnectionMessage = "Success!";
-                    Sitemaps = t.Result;
+                    Sitemaps = new ObservableCollection<Sitemap>(t.Result);
                 }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
@@ -190,8 +251,74 @@ namespace OpenHab.UI.ViewModels
             _settingsManager.SaveSettings(settings);
 
             //TODO: broadcast settings changed
+
+            if (_navigationService.CanGoBack())
+                _navigationService.GoBack();
+            else
+                _navigationService.Navigate("Hub", new HubPageParameters {IsHomepage = true});
         }
 
+
+
+        private void DiscoverServer()
+        {
+            CloseDiscoverDialog();
+
+            const string httpProtocol = "_openhab-server._tcp.local";
+            const string httpsProtocol = "_openhab-server-ssl._tcp.local";
+
+            ShowDiscoverPopup = true;
+            IsSearching = true;
+            DiscoverMessage = "Searching for openHAB services, please wait ...";
+
+            _discoverCancellationTokenSource = new CancellationTokenSource();
+
+            // find services
+            Task.Run(() => ZeroconfResolver.ResolveAsync(httpProtocol, 
+                    scanTime: TimeSpan.FromSeconds(5),
+                    cancellationToken: _discoverCancellationTokenSource.Token))
+                .ContinueWith(t =>
+                {
+                    IsSearching = false;
+
+                    if (t.IsCanceled)
+                        return;
+
+                    if (t.IsFaulted)
+                        return;
+
+                    if (t.Result.Count == 0)
+                    {
+                        DiscoverMessage = "None services found. Make sure UDP port 5353 is not blocked by server's firewall.";
+                    }
+                    else
+                    {
+                        DiscoverMessage = string.Format("Found {0} service(s).", t.Result.Count);
+
+                        DiscoveredServers = t.Result;
+                    }
+
+                }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        private void CloseDiscoverDialog()
+        {
+            if (_discoverCancellationTokenSource != null)
+            {
+                _discoverCancellationTokenSource.Cancel();
+                _discoverCancellationTokenSource = null;
+            }
+
+            ShowDiscoverPopup = false;
+        }
+
+        private void AcceptDiscoverServer()
+        {
+            //TODO: get selected server
+            
+
+            CloseDiscoverDialog();
+        }
 
     }
 }

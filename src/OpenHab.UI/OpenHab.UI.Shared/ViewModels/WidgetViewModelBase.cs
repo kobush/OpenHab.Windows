@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Microsoft.Practices.Prism.Mvvm;
 using Microsoft.Practices.Unity;
 using OpenHab.Client;
@@ -16,14 +17,23 @@ namespace OpenHab.UI.ViewModels
         [Dependency]
         public ISettingsManager SettingsManager { get; set; }
 
-        public void Set(Widget widget)
+        public void Update(Widget widget)
         {
+            Debug.Assert(widget != null);
+            Debug.Assert(_widget == null || _widget.WidgetId == widget.WidgetId);
+            Debug.Assert(_widget == null || _widget.Type == widget.Type);
+
             _widget = widget;
 
             Label = _widget.Label;
             Icon = _widget.Icon;
 
             OnModelUpdated();
+        }
+
+        public string WidgetId
+        {
+            get { return _widget.WidgetId; }
         }
 
         protected Widget Widget

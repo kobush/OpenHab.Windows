@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,7 +32,7 @@ namespace OpenHab.UI.ViewModels
         private DelegateCommand _homepageCommand;
 
         private string _pageTitle;
-        private IEnumerable<WidgetViewModelBase> _widgets;
+        private ObservableCollection<WidgetViewModelBase> _widgets;
         private CancellationTokenSource _loadingCancellationTokenSource;
         private HubPageParameters _parameters;
         private bool _isLoading;
@@ -88,7 +89,7 @@ namespace OpenHab.UI.ViewModels
             protected set { SetProperty(ref _lastUpdateTime, value); }
         }
 
-        public IEnumerable<WidgetViewModelBase> Widgets
+        public ObservableCollection<WidgetViewModelBase> Widgets
         {
             get { return _widgets; }
             private set { SetProperty(ref _widgets, value); }
@@ -177,12 +178,45 @@ namespace OpenHab.UI.ViewModels
         {
             PageTitle = page.Title;
 
-            var widgets = new List<WidgetViewModelBase>();
-            foreach (var widget in page.Widgets)
+            // check if collection has changed
+            bool hasChanged = false;
+            if (_widgets == null || _widgets.Count != page.Widgets.Count)
             {
-                var widgetViewModel = _widgetViewModelFactory.Create(widget.Type);
-                widgetViewModel.Set(widget);
-                widgets.Add(widgetViewModel);
+                hasChanged = true;
+            }
+            else
+            {
+                for (int index = 0; index < page.Widgets.Count; index++)
+                {
+                    if (_widgets[index].WidgetId != page.Widgets[index].WidgetId)
+                    {
+                        hasChanged = true;
+                        break;
+                    }
+                }
+            }
+
+            // use existing, or rebuild if has changed
+            var widgets = (_widgets != null && !hasChanged) ? _widgets : new ObservableCollection<WidgetViewModelBase>();
+
+            for (int index = 0; index < page.Widgets.Count; index++)
+            {
+                var widget = page.Widgets[index];
+
+                WidgetViewModelBase vm;
+                if (index < widgets.Count)
+                {
+                    // update existing
+                    vm = widgets[index];
+                }
+                else
+                {
+                    // create new 
+                    vm = _widgetViewModelFactory.Create(widget.Type);
+                    widgets.Insert(index, vm);
+                }
+
+                vm.Update(widget);
             }
 
             Widgets = widgets;

@@ -29,7 +29,7 @@ namespace OpenHab.UI.ViewModels
             foreach (var childWidget in Widget.Widgets)
             {
                 var childViewModel = _widgetViewModelFactory.Create(childWidget.Type);
-                childViewModel.Set(childWidget);
+                childViewModel.Update(childWidget);
                 widgets.Add(childViewModel);
             }
 

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.Practices.Prism.Mvvm;
 using Microsoft.Practices.Unity;
 using OpenHab.Client;
@@ -13,6 +15,8 @@ namespace OpenHab.UI.ViewModels
         private string _icon;
         private string _label;
         private Uri _iconUrl;
+        private bool _isLinked;
+        private string _value;
 
         [Dependency]
         public ISettingsManager SettingsManager { get; set; }
@@ -24,9 +28,6 @@ namespace OpenHab.UI.ViewModels
             Debug.Assert(_widget == null || _widget.Type == widget.Type);
 
             _widget = widget;
-
-            Label = _widget.Label;
-            Icon = _widget.Icon;
 
             OnModelUpdated();
         }
@@ -45,6 +46,12 @@ namespace OpenHab.UI.ViewModels
         {
             get { return _label; }
             protected set { SetProperty(ref _label, value); }
+        }
+
+        public string Value
+        {
+            get { return _value; }
+            protected set { SetProperty(ref _value, value); }
         }
 
         public string Icon
@@ -73,7 +80,37 @@ namespace OpenHab.UI.ViewModels
             private set { SetProperty(ref _iconUrl, value); }
         }
 
-        protected abstract void OnModelUpdated();
+        public bool IsLinked
+        {
+            get { return _isLinked; }
+            private set { SetProperty(ref _isLinked, value); }
+        }
+
+        static readonly Regex LabelRegex = new Regex(".*(?<value>\\[.*\\]).*", 
+            RegexOptions.Singleline | RegexOptions.CultureInvariant);
+
+        protected virtual void OnModelUpdated()
+        {
+            var m = LabelRegex.Match(_widget.Label);
+            if (m.Success)
+            {
+                Group g = m.Groups["value"];
+                if (g.Success)
+                {
+                    Value = g.Value.Substring(1, g.Value.Length - 2);
+                    Label = (_widget.Label.Substring(0, g.Index) +
+                            _widget.Label.Substring(g.Index + g.Length)).Trim();
+                }
+            }
+            else
+            {
+                Label = _widget.Label;
+            }
+
+            Icon = _widget.Icon;
+            IsLinked = _widget.LinkedPage != null;
+        }
+
     }
 
 

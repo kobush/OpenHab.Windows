@@ -4,7 +4,7 @@ namespace OpenHab.UI.ViewModels
     {
         protected override void OnModelUpdated()
         {
-            
+            base.OnModelUpdated();
         }
     }
 }

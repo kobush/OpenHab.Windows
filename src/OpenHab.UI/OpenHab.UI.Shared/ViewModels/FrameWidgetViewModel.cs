@@ -25,6 +25,8 @@ namespace OpenHab.UI.ViewModels
 
         protected override void OnModelUpdated()
         {
+            base.OnModelUpdated();
+
             var widgets = new List<WidgetViewModelBase>();
             foreach (var childWidget in Widget.Widgets)
             {

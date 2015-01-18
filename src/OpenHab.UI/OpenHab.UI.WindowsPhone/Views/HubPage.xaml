@@ -10,22 +10,133 @@
     xmlns:views="using:OpenHab.UI.Views"
     xmlns:helpers="using:OpenHab.UI.Helpers"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:controls="using:WinRTXamlToolkit.Controls"
     mc:Ignorable="d"
+    RequestedTheme="Light"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mvvm:ViewModelLocator.AutoWireViewModel="true" 
     d:DataContext="{d:DesignInstance viewModels:HubPageViewModel}">
 
     <Page.Resources>
 
+        <Style x:Key="WidgetBorderStyle" TargetType="Border">
+            <Setter Property="Background" Value="#33000000" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="0,0,0,10" />
+            <Setter Property="BorderThickness" Value="4,0,0,0" />
+            <Setter Property="BorderBrush" Value="{StaticResource PhoneAccentBrush}"/>
+        </Style>
+        
+        <Style x:Key="WidgetIconStyle" TargetType="Image">
+            <!-- this is default size of OpenHab icons -->
+            <Setter Property="Stretch" Value="None" />
+            <Setter Property="Width" Value="32" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Margin" Value="6,10,8,10" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+
+        <Style x:Key="WidgetLinkChevronStyle" TargetType="ContentControl">
+            <Setter Property="Width" Value="40" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContentControl">
+                        <Border Background="#19000000">
+                            <Path
+                                Width="20" Height="22.5" Stretch="Fill" Fill="#99FFFFFF"
+                                UseLayoutRounding="True" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                Data="F1 M 39.8307,37.6042L 36.6641,34.4375L 25.1849,23.3542L 35.4766,23.3542L 50.5182,37.6042L 35.4766,51.8542L 25.1849,51.8542L 36.6641,40.7708L 39.8307,37.6042 Z ">
+                            </Path>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <DataTemplate x:Key="FrameWidgetTemplate">
             <views:FrameWidgetView/>
         </DataTemplate>
-        
+
+        <DataTemplate x:Key="GroupWidgetTemplate"
+                      d:DataContext="{d:DesignInstance viewModels:GroupWidgetViewModel}">
+            <controls:ListItemButton
+                Command="{Binding NavigateCommand}" 
+                IsEnabled="{Binding IsLinked}"> 
+
+                <Border Style="{StaticResource WidgetBorderStyle}">
+                    
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Image Style="{StaticResource WidgetIconStyle}">
+                            <Image.Source>
+                                <BitmapImage UriSource="{Binding IconUrl}" />
+                            </Image.Source>
+                        </Image>
+
+                        <TextBlock Text="{Binding Label}" Style="{StaticResource ListViewItemTextBlockStyle}" FontSize="22" 
+                                   Margin="0,6,6,6"
+                                   Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+
+                        <ContentControl Grid.RowSpan="2" Grid.Column="2" 
+                                        Style="{StaticResource WidgetLinkChevronStyle}"
+                                        Visibility="{Binding IsLinked, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                    </Grid>
+                </Border>
+            </controls:ListItemButton>
+        </DataTemplate>
+
+        <DataTemplate x:Key="TextWidgetTemplate"
+                      d:DataContext="{d:DesignInstance viewModels:TextWidgetViewModel}">
+            
+            <controls:ListItemButton>
+                <Border Style="{StaticResource WidgetBorderStyle}" >
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Image Grid.RowSpan="2" VerticalAlignment="Top"
+                           Style="{StaticResource WidgetIconStyle}">
+                            <Image.Source>
+                                <BitmapImage UriSource="{Binding IconUrl}" />
+                            </Image.Source>
+                        </Image>
+
+                        <TextBlock Text="{Binding Label}" Style="{StaticResource ListViewItemTextBlockStyle}" FontSize="22" 
+                                   Margin="0,6,6,0"
+                                   Grid.Column="1" VerticalAlignment="Top" TextTrimming="CharacterEllipsis" />
+
+                        <TextBlock Text="{Binding Value}" Style="{StaticResource ListViewItemTextBlockStyle}" FontSize="22" 
+                                   Visibility="{Binding Value, Converter={StaticResource NotEmptyToVisibilityConverter}}"
+                                   Margin="0,0,6,6" Grid.Column="1" Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+
+                        <ContentControl Grid.RowSpan="2" Grid.Column="2" 
+                                        Style="{StaticResource WidgetLinkChevronStyle}"
+                                        Visibility="{Binding IsLinked, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                    </Grid>
+                </Border>
+            </controls:ListItemButton>
+        </DataTemplate>
+
         <ui:WidgetTemplateSelector x:Key="WidgetTemplateSelector"
                                    FrameWidgetTemplate="{StaticResource FrameWidgetTemplate}"
+                                   GroupWidgetTemplate="{StaticResource GroupWidgetTemplate}"
+                                   TextWidgetTemplate="{StaticResource TextWidgetTemplate}"
                                    />
 
-        <helpers:CaseConverter x:Key="CaseConverter" />
 
         <DataTemplate x:Key="HubHeaderTemplate" >
             <TextBlock Text="{Binding Converter={StaticResource CaseConverter}}"/>
@@ -36,38 +147,15 @@
 
                 <ListView  ItemsSource="{Binding Widgets}" 
                            IsItemClickEnabled="False"
-                           ContinuumNavigationTransitionInfo.ExitElementContainer="True">
+                           ContinuumNavigationTransitionInfo.ExitElementContainer="True"
+                           ItemTemplateSelector="{StaticResource WidgetTemplateSelector}">
                     
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                         </Style>
                     </ListView.ItemContainerStyle>
-                    <ListView.ItemTemplate>
-                        <DataTemplate>
-                            <Border Background="#FF1F1F1F" Padding="6,4" Margin="0,0,0,10">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    
-                                    <Image Stretch="None" Width="32" Height="32" Margin="0,6,6,6" VerticalAlignment="Center">
-                                        <Image.Source>
-                                            <BitmapImage UriSource="{Binding IconUrl}" />
-                                        </Image.Source>
-                                    </Image>
-                                    
-                                    <TextBlock Text="{Binding Label}" Style="{StaticResource ListViewItemTextBlockStyle}" Grid.Column="1" FontSize="26" VerticalAlignment="Center" />
-                                    <Grid Grid.Column="2" Width="32">
-                                        <Path Width="20" Height="22.5" Stretch="Fill" Fill="#99FFFFFF" Data="F1 M 39.8307,37.6042L 36.6641,34.4375L 25.1849,23.3542L 35.4766,23.3542L 50.5182,37.6042L 35.4766,51.8542L 25.1849,51.8542L 36.6641,40.7708L 39.8307,37.6042 Z " UseLayoutRounding="False" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Grid>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-
+                    
                 </ListView>
 
             </StackPanel>

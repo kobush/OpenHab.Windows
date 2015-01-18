@@ -264,7 +264,7 @@ namespace OpenHab.UI.ViewModels
         {
             CloseDiscoverDialog();
 
-            const string httpProtocol = "_openhab-server._tcp.local";
+            const string httpProtocol = "_openhab-server._tcp";
             const string httpsProtocol = "_openhab-server-ssl._tcp.local";
 
             ShowDiscoverPopup = true;
@@ -275,7 +275,7 @@ namespace OpenHab.UI.ViewModels
 
             // find services
             Task.Run(() => ZeroconfResolver.ResolveAsync(httpProtocol, 
-                    scanTime: TimeSpan.FromSeconds(5),
+                    scanTime: TimeSpan.FromSeconds(3),
                     cancellationToken: _discoverCancellationTokenSource.Token))
                 .ContinueWith(t =>
                 {

@@ -175,6 +175,9 @@
     <Reference Include="System.Net.Http.Primitives">
       <HintPath>..\..\packages\Microsoft.Net.Http.2.2.22\lib\wpa81\System.Net.Http.Primitives.dll</HintPath>
     </Reference>
+    <Reference Include="WinRTXamlToolkit">
+      <HintPath>..\..\packages\WinRTXamlToolkit.WindowsPhone.1.8.1.0\lib\wpa\WinRTXamlToolkit.dll</HintPath>
+    </Reference>
     <Reference Include="Zeroconf">
       <HintPath>..\..\packages\Zeroconf.2.3\lib\portable-win81+wpa81\Zeroconf.dll</HintPath>
     </Reference>

@@ -4,7 +4,7 @@
     {
         protected override void OnModelUpdated()
         {
-            
+            base.OnModelUpdated();
         }
     }
 }

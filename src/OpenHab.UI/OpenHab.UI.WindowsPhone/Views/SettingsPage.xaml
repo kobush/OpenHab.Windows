@@ -16,8 +16,8 @@
     <Page.BottomAppBar>
         <CommandBar >
             <CommandBar.PrimaryCommands>
-                <!--<AppBarButton Label="discover" Icon="Find" IsCompact="True"
-                              Command="{Binding DiscoverServerCommand}" />-->
+                <AppBarButton Label="discover" Icon="Find" IsCompact="True"
+                              Command="{Binding DiscoverServerCommand}" />
                 <AppBarButton Label="save" Icon="Save" IsCompact="True"
                               Command="{Binding SaveSettingsCommand}"/>
             </CommandBar.PrimaryCommands>

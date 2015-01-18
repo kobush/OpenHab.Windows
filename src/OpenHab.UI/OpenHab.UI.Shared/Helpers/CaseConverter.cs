@@ -19,7 +19,7 @@ namespace OpenHab.UI.Helpers
 
         public override object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture, string language)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }

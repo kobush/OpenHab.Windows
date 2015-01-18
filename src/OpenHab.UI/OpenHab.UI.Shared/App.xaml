@@ -8,6 +8,7 @@
 
     <mvvm:MvvmAppBase.Resources>
         <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <helpers:BooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" Inverse="True" />
         <helpers:BooleanInverseConverter x:Key="BooleanInverseConverter" />
         <helpers:CaseConverter x:Key="CaseConverter" />
         <helpers:NotEmptyToVisibilityConverter x:Key="NotEmptyToVisibilityConverter" />

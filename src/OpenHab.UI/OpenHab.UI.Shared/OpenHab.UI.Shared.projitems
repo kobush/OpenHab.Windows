@@ -22,6 +22,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\NotNullToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Settings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SettingsManager.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\ChartWidgetViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\FrameWidgetViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\GroupWidgetViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\HubPageViewModel.cs" />

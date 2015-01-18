@@ -7,11 +7,13 @@ namespace OpenHab.UI.Helpers
 {
     public class BooleanToVisibilityConverter : ValueConverter
     {
+        public bool Inverse { get; set; }
+
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture, string language)
         {
             var boolValue = System.Convert.ToBoolean(value);
 
-            if (parameter != null)
+            if (Inverse)
                 boolValue = !boolValue;
 
             return boolValue ? Visibility.Visible : Visibility.Collapsed;

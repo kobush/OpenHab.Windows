@@ -25,6 +25,8 @@ namespace OpenHab.UI.ViewModels
                     return _container.Resolve<TextWidgetViewModel>();
                 case WidgetType.Switch:
                     return _container.Resolve<SwitchWidgetViewModel>();
+                case WidgetType.Chart:
+                    return _container.Resolve<ChartWidgetViewModel>();
 
                 default:
                     throw new ArgumentOutOfRangeException();

@@ -57,9 +57,10 @@
             <views:FrameWidgetView/>
         </DataTemplate>
 
-        <DataTemplate x:Key="GroupWidgetTemplate"
-                      d:DataContext="{d:DesignInstance viewModels:GroupWidgetViewModel}">
+        <DataTemplate x:Key="GroupWidgetTemplate">
+            
             <controls:ListItemButton
+                d:DataContext="{d:DesignInstance viewModels:GroupWidgetViewModel}"
                 Command="{Binding NavigateCommand}" 
                 IsEnabled="{Binding IsLinked}"> 
 
@@ -90,10 +91,13 @@
             </controls:ListItemButton>
         </DataTemplate>
 
-        <DataTemplate x:Key="TextWidgetTemplate"
-                      d:DataContext="{d:DesignInstance viewModels:TextWidgetViewModel}">
+        <DataTemplate x:Key="TextWidgetTemplate">
             
-            <controls:ListItemButton>
+            <controls:ListItemButton
+                d:DataContext="{d:DesignInstance viewModels:TextWidgetViewModel}"
+                Command="{Binding NavigateCommand}" 
+                IsEnabled="{Binding IsLinked}">
+                
                 <Border Style="{StaticResource WidgetBorderStyle}" >
 
                     <Grid>
@@ -143,10 +147,11 @@
         </DataTemplate>
 
         <DataTemplate x:Key="HubSectionTemplate">
-            <StackPanel>
+            <Grid>
 
                 <ListView  ItemsSource="{Binding Widgets}" 
-                           IsItemClickEnabled="False"
+                           IsItemClickEnabled="False" 
+                           SelectionMode="None"
                            ContinuumNavigationTransitionInfo.ExitElementContainer="True"
                            ItemTemplateSelector="{StaticResource WidgetTemplateSelector}">
                     
@@ -158,7 +163,7 @@
                     
                 </ListView>
 
-            </StackPanel>
+            </Grid>
         </DataTemplate>
         
 
@@ -167,15 +172,16 @@
     <Page.BottomAppBar>
         <CommandBar>
             <CommandBar.PrimaryCommands>
-                
-                <AppBarButton Command="{Binding ConnectCommand}" 
-                          Label="refresh" Icon="Refresh" IsCompact="True"/>
-            </CommandBar.PrimaryCommands>
-            <CommandBar.SecondaryCommands>
-                
+
                 <AppBarButton Command="{Binding HomepageCommand}" 
                               Label="homepage" Icon="Home"
-                              Visibility="{Binding IsHomepage, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                              Visibility="{Binding IsHomepage, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
+
+                <AppBarButton Command="{Binding ConnectCommand}" 
+                          Label="refresh" Icon="Refresh" IsCompact="True"/>
+                
+            </CommandBar.PrimaryCommands>
+            <CommandBar.SecondaryCommands>
                 
                 <AppBarButton Command="{Binding SettingsCommand}" 
                           Label="settings" Icon="Setting"/>
@@ -193,7 +199,8 @@
         </interactivity:Interaction.Behaviors>
         
 
-        <Hub x:Name="Hub" x:Uid="Hub" Header="openHAB"
+        <Hub x:Name="Hub" x:Uid="Hub" 
+             Header="{Binding PageTitle}"
              helpers:HubBinder.DataSource="{Binding Widgets}"
              helpers:HubBinder.HeaderTemplate="{StaticResource HubHeaderTemplate}"
              helpers:HubBinder.SectionTemplate="{StaticResource HubSectionTemplate}">

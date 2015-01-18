@@ -2,7 +2,10 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Windows.Input;
+using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Mvvm;
+using Microsoft.Practices.Prism.Mvvm.Interfaces;
 using Microsoft.Practices.Unity;
 using OpenHab.Client;
 using OpenHab.UI.Services;
@@ -18,8 +21,13 @@ namespace OpenHab.UI.ViewModels
         private bool _isLinked;
         private string _value;
 
+        private DelegateCommand _navigateCommand;
+
         [Dependency]
         public ISettingsManager SettingsManager { get; set; }
+
+        [Dependency]
+        public INavigationService NavigationService { get; set; }
 
         public void Update(Widget widget)
         {
@@ -86,6 +94,11 @@ namespace OpenHab.UI.ViewModels
             private set { SetProperty(ref _isLinked, value); }
         }
 
+        public ICommand NavigateCommand
+        {
+            get { return (_navigateCommand) ?? (_navigateCommand = new DelegateCommand(NavigateExecute)); }
+        }
+
         static readonly Regex LabelRegex = new Regex(".*(?<value>\\[.*\\]).*", 
             RegexOptions.Singleline | RegexOptions.CultureInvariant);
 
@@ -111,6 +124,11 @@ namespace OpenHab.UI.ViewModels
             IsLinked = _widget.LinkedPage != null;
         }
 
+        private void NavigateExecute()
+        {
+            if (_widget.LinkedPage != null)
+                NavigationService.Navigate(PageToken.Hub, new HubPageParameters {Page = _widget.LinkedPage});
+        }
     }
 
 

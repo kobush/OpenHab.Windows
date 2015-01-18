@@ -18,6 +18,7 @@ namespace OpenHab.UI.ViewModels
     public class HubPageParameters
     {
         public bool IsHomepage { get; set; }
+        public Page Page { get; set; }
     }
 
     public class HubPageViewModel : ViewModel
@@ -145,15 +146,22 @@ namespace OpenHab.UI.ViewModels
             IsLoading = true;
             Task.Run(async () =>
             {
-                var allSitempas = (await client.GetSitemaps(_loadingCancellationTokenSource.Token)).ToArray();
-                var sitemap = allSitempas.FirstOrDefault(s => s.Name == settings.Sitemap) ?? 
-                    allSitempas.FirstOrDefault();
 
                 Page page = null;
                 if (IsHomepage)
-                    page = (await client.GetPage(sitemap.Homepage, _loadingCancellationTokenSource.Token));
-                
-                //TODO: load other page
+                {
+                    // load home page
+                    var allSitempas = (await client.GetSitemaps(_loadingCancellationTokenSource.Token)).ToArray();
+                    var sitemap = allSitempas.FirstOrDefault(s => s.Name == settings.Sitemap) ??
+                                  allSitempas.FirstOrDefault();
+
+                    page = await client.GetPage(sitemap.Homepage, _loadingCancellationTokenSource.Token);
+                }
+                else
+                {
+                    // load sub-page
+                    page = await client.GetPage(_parameters.Page, _loadingCancellationTokenSource.Token);
+                }
                 
                 return page;
 

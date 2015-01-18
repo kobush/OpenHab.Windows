@@ -126,7 +126,7 @@ namespace OpenHab.UI.ViewModels
 
         private void OnSettingsChanged(Settings settings)
         {
-
+            LoadPage();
         }
 
 
@@ -230,7 +230,7 @@ namespace OpenHab.UI.ViewModels
                 else
                 {
                     // create new 
-                    frameViewModel = (FrameWidgetViewModel)_widgetViewModelFactory.Create(widget.Type);
+                    frameViewModel = (FrameWidgetViewModel)_widgetViewModelFactory.Create(widget.Type, ItemType.Unknown);
                     frames.Insert(index, frameViewModel);
                 }
 
@@ -244,7 +244,7 @@ namespace OpenHab.UI.ViewModels
                 // create or update default frame
                 if (defaultFrame == null)
                 {
-                    defaultFrame = (FrameWidgetViewModel)_widgetViewModelFactory.Create(WidgetType.Frame);
+                    defaultFrame = (FrameWidgetViewModel)_widgetViewModelFactory.Create(WidgetType.Frame, ItemType.Unknown);
                     frames.Add(defaultFrame);
                 }
 

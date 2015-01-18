@@ -107,6 +107,29 @@ namespace OpenHab.Client
             }
         }
 
+        private async Task MakePutRequest(string requestUri, string content, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using (var client = GetWebClient())
+                {
+                    HttpContent httpContent = new StringContent(content, Encoding.UTF8, "text/plain");
+
+                    var response = await client.PutAsync(requestUri, httpContent, cancellationToken);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        throw new Exception("Request failed with status code " + response.StatusCode);
+                    }
+
+                    //return await response.Content.ReadAsStringAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Request failed", ex);
+            }
+        }
+
         public async Task<IEnumerable<Item>> GetItems(CancellationToken cancellationToken)
         {
             var list = await MakeGetRequest<ItemsList>("/rest/items", cancellationToken);
@@ -128,6 +151,11 @@ namespace OpenHab.Client
         public async Task<Page> GetPage(Page page, CancellationToken cancellationToken)
         {
             return await MakeGetRequest<Page>(page.Link.PathAndQuery, cancellationToken);
+        }
+
+        public async Task SetItemState(Item item, string newState, CancellationToken cancellationToken)
+        {
+            await MakePutRequest(item.Link.PathAndQuery + "/state", newState, cancellationToken);
         }
     }
 

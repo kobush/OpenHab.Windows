@@ -4,6 +4,6 @@ namespace OpenHab.UI.ViewModels
 {
     public interface IWidgetViewModelFactory
     {
-        WidgetViewModelBase Create(WidgetType type);
+        WidgetViewModelBase Create(WidgetType type, ItemType itemType);
     }
 }

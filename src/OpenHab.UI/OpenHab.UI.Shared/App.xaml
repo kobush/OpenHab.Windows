@@ -7,11 +7,17 @@
     xmlns:helpers="using:OpenHab.UI.Helpers">
 
     <mvvm:MvvmAppBase.Resources>
-        <helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-        <helpers:BooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" Inverse="True" />
-        <helpers:BooleanInverseConverter x:Key="BooleanInverseConverter" />
-        <helpers:CaseConverter x:Key="CaseConverter" />
-        <helpers:NotEmptyToVisibilityConverter x:Key="NotEmptyToVisibilityConverter" />
+    	<ResourceDictionary>
+    		<ResourceDictionary.MergedDictionaries>
+    			<ResourceDictionary Source="ms-appx:///Resources/ToggleSwitchStyle.xaml"/>
+    		</ResourceDictionary.MergedDictionaries>
+    		<helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    		<helpers:BooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" Inverse="True" />
+    		<helpers:BooleanInverseConverter x:Key="BooleanInverseConverter" />
+    		<helpers:CaseConverter x:Key="CaseConverter" />
+    		<helpers:NotEmptyToVisibilityConverter x:Key="NotEmptyToVisibilityConverter" />
+
+    	</ResourceDictionary>
 
     </mvvm:MvvmAppBase.Resources>
 </mvvm:MvvmAppBase>

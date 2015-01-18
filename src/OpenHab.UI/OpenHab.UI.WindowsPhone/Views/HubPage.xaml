@@ -135,11 +135,46 @@
             </controls:ListItemButton>
         </DataTemplate>
 
+        <DataTemplate x:Key="SwitchWidgetTemplate">
+
+
+                <Border Style="{StaticResource WidgetBorderStyle}" d:DesignWidth="410.5" >
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Image Grid.RowSpan="2" VerticalAlignment="Top"
+                           Style="{StaticResource WidgetIconStyle}">
+                            <Image.Source>
+                                <BitmapImage UriSource="{Binding IconUrl}" />
+                            </Image.Source>
+                        </Image>
+
+                        <TextBlock Text="{Binding Label}" Style="{StaticResource ListViewItemTextBlockStyle}" FontSize="22" 
+                                   Margin="0,6,6,0"
+                                   Grid.Column="1" VerticalAlignment="Top" TextTrimming="CharacterEllipsis" />
+
+                        <ToggleSwitch Grid.Column="2" Margin="0,6,6,6" OnContent="ON" OffContent="OFF"
+                                      IsOn="{Binding IsOn, Mode=TwoWay}" Style="{StaticResource ToggleSwitchStyle}"/>
+
+                        <!--<ContentControl Grid.RowSpan="2" Grid.Column="2" 
+                                        Style="{StaticResource WidgetLinkChevronStyle}"
+                                        Visibility="{Binding IsLinked, Converter={StaticResource BooleanToVisibilityConverter}}"/>-->
+
+                    </Grid>
+                </Border>
+            
+        </DataTemplate>
+
         <ui:WidgetTemplateSelector x:Key="WidgetTemplateSelector"
                                    FrameWidgetTemplate="{StaticResource FrameWidgetTemplate}"
                                    GroupWidgetTemplate="{StaticResource GroupWidgetTemplate}"
                                    TextWidgetTemplate="{StaticResource TextWidgetTemplate}"
-                                   />
+                                   SwitchWidgetTemplate="{StaticResource SwitchWidgetTemplate}"/>
 
 
         <DataTemplate x:Key="HubHeaderTemplate" >

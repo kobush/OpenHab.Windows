@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using OpenHab.Client;
 using OpenHab.UI.Helpers;
 
 namespace OpenHab.UI.ViewModels
@@ -30,7 +31,9 @@ namespace OpenHab.UI.ViewModels
             var widgets = new List<WidgetViewModelBase>();
             foreach (var childWidget in Widget.Widgets)
             {
-                var childViewModel = _widgetViewModelFactory.Create(childWidget.Type);
+                var childViewModel = _widgetViewModelFactory.Create(childWidget.Type, 
+                    childWidget.Item != null ? childWidget.Item.Type: ItemType.Unknown);
+
                 childViewModel.Update(childWidget);
                 widgets.Add(childViewModel);
             }

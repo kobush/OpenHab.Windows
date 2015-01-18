@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Mvvm;
@@ -22,6 +24,7 @@ namespace OpenHab.UI.ViewModels
         private string _value;
 
         private DelegateCommand _navigateCommand;
+        private CancellationTokenSource _updateCancellationTokenSource;
 
         [Dependency]
         public ISettingsManager SettingsManager { get; set; }
@@ -129,7 +132,28 @@ namespace OpenHab.UI.ViewModels
             if (_widget.LinkedPage != null)
                 NavigationService.Navigate(PageToken.Hub, new HubPageParameters {Page = _widget.LinkedPage});
         }
+
+        protected void SetItemState(string newState)
+        {
+            var settings = SettingsManager.CurrentSettings;
+            var baseUri = settings.ResolveBaseUri();
+            var client = new OpenHabRestClient(baseUri);
+
+            if (_widget.Item == null)
+                throw new InvalidOperationException("Widget isn't bound to any item");
+
+            _updateCancellationTokenSource = new CancellationTokenSource();
+
+            Task.Run(async () =>
+            {
+                await client.SetItemState(_widget.Item, newState, _updateCancellationTokenSource.Token);
+            })
+                .ContinueWith(
+                    t =>
+                    {
+
+                    }, TaskScheduler.FromCurrentSynchronizationContext());
+
+        }
     }
-
-
 }

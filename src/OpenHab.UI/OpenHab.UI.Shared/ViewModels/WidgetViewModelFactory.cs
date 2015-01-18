@@ -13,7 +13,7 @@ namespace OpenHab.UI.ViewModels
             _container = container;
         }
 
-        public WidgetViewModelBase Create(WidgetType widgetType)
+        public WidgetViewModelBase Create(WidgetType widgetType, ItemType itemType)
         {
             switch (widgetType)
             {
@@ -24,7 +24,15 @@ namespace OpenHab.UI.ViewModels
                 case WidgetType.Text:
                     return _container.Resolve<TextWidgetViewModel>();
                 case WidgetType.Switch:
-                    return _container.Resolve<SwitchWidgetViewModel>();
+                    if (itemType == ItemType.RollershutterItem)
+                        return _container.Resolve<RollerShutterWidgetViewModel>();
+                    if (itemType == ItemType.SwitchItem)
+                        return _container.Resolve<SwitchWidgetViewModel>();
+                    
+                    throw new ArgumentOutOfRangeException();
+
+                case WidgetType.RollerShutter:
+                    return _container.Resolve<RollerShutterWidgetViewModel>();
                 case WidgetType.Chart:
                     return _container.Resolve<ChartWidgetViewModel>();
 
@@ -32,5 +40,9 @@ namespace OpenHab.UI.ViewModels
                     throw new ArgumentOutOfRangeException();
             }
         }
+    }
+
+    public class RollerShutterWidgetViewModel : WidgetViewModelBase
+    {
     }
 }

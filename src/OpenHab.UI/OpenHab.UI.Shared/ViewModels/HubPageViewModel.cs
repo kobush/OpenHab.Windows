@@ -33,12 +33,13 @@ namespace OpenHab.UI.ViewModels
         private DelegateCommand _homepageCommand;
 
         private string _pageTitle;
-        private ObservableCollection<WidgetViewModelBase> _widgets;
+        private ObservableCollection<FrameWidgetViewModel> _frames;
         private CancellationTokenSource _loadingCancellationTokenSource;
         private HubPageParameters _parameters;
         private bool _isLoading;
         private string _lastUpdateTime;
         private bool _isHomepage;
+        private const string DefaultFrameId = "__default_frame__";
 
         public HubPageViewModel(
             ISettingsManager settingsManager,
@@ -90,10 +91,10 @@ namespace OpenHab.UI.ViewModels
             protected set { SetProperty(ref _lastUpdateTime, value); }
         }
 
-        public ObservableCollection<WidgetViewModelBase> Widgets
+        public ObservableCollection<FrameWidgetViewModel> Frames
         {
-            get { return _widgets; }
-            private set { SetProperty(ref _widgets, value); }
+            get { return _frames; }
+            private set { SetProperty(ref _frames, value); }
         }
 
         public override void OnNavigatedTo(object navigationParameter, NavigationMode navigationMode, Dictionary<string, object> viewModelState)
@@ -186,48 +187,76 @@ namespace OpenHab.UI.ViewModels
         {
             PageTitle = page.Title;
 
+            var frameWidgets = page.Widgets.Where(w => w.Type == WidgetType.Frame).ToArray();
+            var nonFrameWidgets = page.Widgets.Where(w => w.Type != WidgetType.Frame).ToArray();
+
+            int newFrameCount = frameWidgets.Length;
+            if (nonFrameWidgets.Length > 0)
+                newFrameCount++;
+
             // check if collection has changed
-            bool hasChanged = false;
-            if (_widgets == null || _widgets.Count != page.Widgets.Count)
+            bool framesChanged = false;
+            if (_frames == null || _frames.Count != newFrameCount)
             {
-                hasChanged = true;
+                framesChanged = true;
             }
             else
             {
-                for (int index = 0; index < page.Widgets.Count; index++)
+                for (int index = 0; index < frameWidgets.Length; index++)
                 {
-                    if (_widgets[index].WidgetId != page.Widgets[index].WidgetId)
+                    if (_frames[index].WidgetId != frameWidgets[index].WidgetId)
                     {
-                        hasChanged = true;
+                        framesChanged = true;
                         break;
                     }
                 }
             }
 
             // use existing, or rebuild if has changed
-            var widgets = (_widgets != null && !hasChanged) ? _widgets : new ObservableCollection<WidgetViewModelBase>();
+            ObservableCollection<FrameWidgetViewModel> frames;
+            if (_frames != null && !framesChanged) frames = _frames;
+            else frames = new ObservableCollection<FrameWidgetViewModel>();
 
-            for (int index = 0; index < page.Widgets.Count; index++)
+            for (int index = 0; index < frameWidgets.Length; index++)
             {
-                var widget = page.Widgets[index];
+                var widget = frameWidgets[index];
 
-                WidgetViewModelBase vm;
-                if (index < widgets.Count)
+                FrameWidgetViewModel frameViewModel;
+                if (index < frames.Count)
                 {
                     // update existing
-                    vm = widgets[index];
+                    frameViewModel = frames[index];
                 }
                 else
                 {
                     // create new 
-                    vm = _widgetViewModelFactory.Create(widget.Type);
-                    widgets.Insert(index, vm);
+                    frameViewModel = (FrameWidgetViewModel)_widgetViewModelFactory.Create(widget.Type);
+                    frames.Insert(index, frameViewModel);
                 }
 
-                vm.Update(widget);
+                frameViewModel.Update(widget);
             }
 
-            Widgets = widgets;
+            if (nonFrameWidgets.Length > 0)
+            {
+                var defaultFrame = frames.FirstOrDefault(w => w.WidgetId == DefaultFrameId);
+
+                // create or update default frame
+                if (defaultFrame == null)
+                {
+                    defaultFrame = (FrameWidgetViewModel)_widgetViewModelFactory.Create(WidgetType.Frame);
+                    frames.Add(defaultFrame);
+                }
+
+                var widget = new Widget();
+                widget.Type = WidgetType.Frame;
+                widget.Label = "";
+                widget.WidgetId = DefaultFrameId;
+                widget.Widgets = nonFrameWidgets;
+                defaultFrame.Update(widget);
+            }
+
+            Frames = frames;
         }
 
         private void OpenSettingsPage()

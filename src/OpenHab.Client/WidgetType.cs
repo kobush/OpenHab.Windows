@@ -20,6 +20,7 @@
         Slider,
         Switch,
         Video,
-        WebView
+        WebView,
+        Colorpicker
     }
 }

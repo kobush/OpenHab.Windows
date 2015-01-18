@@ -201,7 +201,7 @@
 
         <Hub x:Name="Hub" x:Uid="Hub" 
              Header="{Binding PageTitle}"
-             helpers:HubBinder.DataSource="{Binding Widgets}"
+             helpers:HubBinder.DataSource="{Binding Frames}"
              helpers:HubBinder.HeaderTemplate="{StaticResource HubHeaderTemplate}"
              helpers:HubBinder.SectionTemplate="{StaticResource HubSectionTemplate}">
             

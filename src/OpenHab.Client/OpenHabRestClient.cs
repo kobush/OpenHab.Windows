@@ -118,7 +118,7 @@ namespace OpenHab.Client
                     var response = await client.PutAsync(requestUri, httpContent, cancellationToken);
                     if (!response.IsSuccessStatusCode)
                     {
-                        throw new Exception("Request failed with status code " + response.StatusCode);
+                        throw new Exception("PUT request failed with status code " + response.StatusCode);
                     }
 
                     //return await response.Content.ReadAsStringAsync();
@@ -126,7 +126,33 @@ namespace OpenHab.Client
             }
             catch (Exception ex)
             {
-                throw new Exception("Request failed", ex);
+                throw new Exception("PUT request failed", ex);
+            }
+        }
+
+        private async Task MakePostRequest(string requestUri, string command, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using (var client = GetWebClient())
+                {
+                    HttpContent httpContent = new StringContent(command, Encoding.UTF8, "text/plain");
+
+                    var httpResponse = await client.PostAsync(requestUri, httpContent, cancellationToken);
+                    if (!httpResponse.IsSuccessStatusCode)
+                    {
+                        var msg = string.Format("POST request failed with status code {0}", httpResponse.StatusCode);
+                        var responseString = await httpResponse.Content.ReadAsStringAsync();
+                        if (!string.IsNullOrEmpty(responseString))
+                            msg += "\n" + responseString;
+
+                        throw new Exception(msg);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("POST request failed", ex);
             }
         }
 
@@ -156,6 +182,11 @@ namespace OpenHab.Client
         public async Task SetItemState(Item item, string newState, CancellationToken cancellationToken)
         {
             await MakePutRequest(item.Link.PathAndQuery + "/state", newState, cancellationToken);
+        }
+
+        public async Task SendItemCommand(Item item, string command, CancellationToken cancellationToken)
+        {
+            await MakePostRequest(item.Link.PathAndQuery , command, cancellationToken);
         }
     }
 

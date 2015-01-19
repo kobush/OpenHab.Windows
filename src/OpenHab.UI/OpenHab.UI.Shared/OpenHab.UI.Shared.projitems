@@ -18,6 +18,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\BooleanInverseConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\BooleanToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\CaseConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ColorConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\ColorToBrushConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\HubBinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\NotNullToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Settings.cs" />

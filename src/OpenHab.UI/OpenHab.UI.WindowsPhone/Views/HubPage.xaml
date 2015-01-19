@@ -36,6 +36,11 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
+        <Style x:Key="WidgetLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource ListViewItemTextBlockStyle}">
+            <Setter Property="FontSize" Value="22" />
+            <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
         <Style x:Key="WidgetLinkChevronStyle" TargetType="ContentControl">
             <Setter Property="Width" Value="40" />
             <Setter Property="Template">
@@ -52,6 +57,8 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <SolidColorBrush x:Key="WidgetLabelForeground" Color="{ThemeResource PhoneForegroundColor}"/>
 
         <DataTemplate x:Key="FrameWidgetTemplate">
             <views:FrameWidgetView/>
@@ -79,9 +86,10 @@
                             </Image.Source>
                         </Image>
 
-                        <TextBlock Text="{Binding Label}" Style="{StaticResource ListViewItemTextBlockStyle}" FontSize="22" 
-                                   Margin="0,6,6,6"
-                                   Grid.Column="1" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Label}" Style="{StaticResource WidgetLabelStyle}"
+                                   Margin="0,6,6,6" Grid.Column="1" VerticalAlignment="Center" 
+                                   Foreground="{Binding LabelColor, Converter={StaticResource ColorToBrushConverter}, 
+                                        ConverterParameter={StaticResource WidgetLabelForeground}}"/>
 
                         <ContentControl Grid.RowSpan="2" Grid.Column="2" 
                                         Style="{StaticResource WidgetLinkChevronStyle}"
@@ -118,13 +126,16 @@
                             </Image.Source>
                         </Image>
 
-                        <TextBlock Text="{Binding Label}" Style="{StaticResource ListViewItemTextBlockStyle}" FontSize="22" 
-                                   Margin="0,6,6,0"
-                                   Grid.Column="1" VerticalAlignment="Top" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Label}" Style="{StaticResource WidgetLabelStyle}" 
+                                   Margin="0,8,6,0" Grid.Column="1" VerticalAlignment="Top" 
+                                   Foreground="{Binding LabelColor, Converter={StaticResource ColorToBrushConverter}, 
+                                        ConverterParameter={StaticResource WidgetLabelForeground}}"/>
 
                         <TextBlock Text="{Binding Value}" Style="{StaticResource ListViewItemTextBlockStyle}" FontSize="22" 
                                    Visibility="{Binding Value, Converter={StaticResource NotEmptyToVisibilityConverter}}"
-                                   Margin="0,0,6,6" Grid.Column="1" Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Right" />
+                                   Margin="0,0,6,6" Grid.Column="1" Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Right" 
+                                   Foreground="{Binding ValueColor, Converter={StaticResource ColorToBrushConverter}, 
+                                        ConverterParameter={StaticResource WidgetLabelForeground}}"/>
 
                         <ContentControl Grid.RowSpan="2" Grid.Column="2" 
                                         Style="{StaticResource WidgetLinkChevronStyle}"

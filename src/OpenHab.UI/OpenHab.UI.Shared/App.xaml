@@ -2,7 +2,6 @@
     x:Class="OpenHab.UI.App"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:OpenHab.UI"
     xmlns:mvvm="using:Microsoft.Practices.Prism.Mvvm"
     xmlns:helpers="using:OpenHab.UI.Helpers">
 
@@ -16,8 +15,9 @@
     		<helpers:BooleanInverseConverter x:Key="BooleanInverseConverter" />
     		<helpers:CaseConverter x:Key="CaseConverter" />
     		<helpers:NotEmptyToVisibilityConverter x:Key="NotEmptyToVisibilityConverter" />
+	        <helpers:ColorToBrushConverter x:Key="ColorToBrushConverter" />
 
-    	</ResourceDictionary>
+	    </ResourceDictionary>
 
     </mvvm:MvvmAppBase.Resources>
 </mvvm:MvvmAppBase>

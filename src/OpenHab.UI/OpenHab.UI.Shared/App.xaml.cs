@@ -6,7 +6,7 @@ using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Navigation;
-
+using MetroLog;
 using Microsoft.Practices.Prism.Mvvm;
 using Microsoft.Practices.Prism.Mvvm.Interfaces;
 using Microsoft.Practices.Prism.PubSubEvents;
@@ -94,6 +94,8 @@ namespace OpenHab.UI
         {
             // must be initialized on UI thread
             _eventAggregator = new EventAggregator();
+
+            _container.RegisterInstance<ILogManager>(LogManagerFactory.DefaultLogManager);
 
             _container.RegisterInstance<INavigationService>(NavigationService);
             _container.RegisterInstance<ISessionStateService>(SessionStateService);

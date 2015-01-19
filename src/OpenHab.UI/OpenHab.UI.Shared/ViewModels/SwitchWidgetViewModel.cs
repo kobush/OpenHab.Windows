@@ -33,7 +33,7 @@ namespace OpenHab.UI.ViewModels
             {
                 if (SetProperty(ref _isOn, value) && !_ignoreStateChange)
                 {
-                    SetItemState(value ? ItemStateOn : ItemStateOff);
+                    SendItemCommand(value ? ItemStateOn : ItemStateOff);
                 }
             }
         }

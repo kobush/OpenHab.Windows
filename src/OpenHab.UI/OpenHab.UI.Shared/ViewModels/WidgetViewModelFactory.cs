@@ -51,8 +51,4 @@ namespace OpenHab.UI.ViewModels
             }
         }
     }
-
-    public class RollerShutterWidgetViewModel : WidgetViewModelBase
-    {
-    }
 }

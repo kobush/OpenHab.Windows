@@ -14,6 +14,8 @@ namespace OpenHab.UI
 
         public DataTemplate SwitchWidgetTemplate { get; set; }
 
+        public DataTemplate RollerShutterWidgetTemplate { get; set; }
+
         protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
         {
             if (item is GroupWidgetViewModel)
@@ -27,6 +29,9 @@ namespace OpenHab.UI
 
             if (item is SwitchWidgetViewModel)
                 return SwitchWidgetTemplate;
+
+            if (item is RollerShutterWidgetViewModel)
+                return RollerShutterWidgetTemplate;
 
             return base.SelectTemplateCore(item, container);
         }

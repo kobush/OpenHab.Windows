@@ -30,6 +30,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\HubPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\IWidgetViewModelFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\PageToken.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\RollerShutterWidgetViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SettingsPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SwitchWidgetViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\TextWidgetViewModel.cs" />

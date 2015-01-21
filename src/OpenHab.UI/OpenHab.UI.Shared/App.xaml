@@ -17,6 +17,7 @@
     		<helpers:CaseConverter x:Key="CaseConverter" />
     		<helpers:NotEmptyToVisibilityConverter x:Key="NotEmptyToVisibilityConverter" />
 	        <helpers:ColorToBrushConverter x:Key="ColorToBrushConverter" />
+            <helpers:StringFormatConverter x:Key="StringFormatConverter" />
 
 	    </ResourceDictionary>
 

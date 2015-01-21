@@ -31,8 +31,7 @@ namespace OpenHab.UI.ViewModels
             var widgets = new List<WidgetViewModelBase>();
             foreach (var childWidget in Widget.Widgets)
             {
-                var childViewModel = _widgetViewModelFactory.Create(childWidget.Type, 
-                    childWidget.Item != null ? childWidget.Item.Type: ItemType.Unknown);
+                var childViewModel = _widgetViewModelFactory.Create(childWidget);
 
                 childViewModel.Update(childWidget);
                 widgets.Add(childViewModel);

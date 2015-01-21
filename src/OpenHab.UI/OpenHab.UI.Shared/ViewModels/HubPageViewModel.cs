@@ -230,7 +230,7 @@ namespace OpenHab.UI.ViewModels
                 else
                 {
                     // create new 
-                    frameViewModel = (FrameWidgetViewModel)_widgetViewModelFactory.Create(widget.Type, ItemType.Unknown);
+                    frameViewModel = (FrameWidgetViewModel)_widgetViewModelFactory.Create(widget);
                     frames.Insert(index, frameViewModel);
                 }
 
@@ -241,19 +241,20 @@ namespace OpenHab.UI.ViewModels
             {
                 var defaultFrame = frames.FirstOrDefault(w => w.WidgetId == DefaultFrameId);
 
+                var defaultFrameWidget = new Widget();
+                defaultFrameWidget.Type = WidgetType.Frame;
+                defaultFrameWidget.Label = "";
+                defaultFrameWidget.WidgetId = DefaultFrameId;
+                defaultFrameWidget.Widgets = nonFrameWidgets;
+
                 // create or update default frame
                 if (defaultFrame == null)
                 {
-                    defaultFrame = (FrameWidgetViewModel)_widgetViewModelFactory.Create(WidgetType.Frame, ItemType.Unknown);
+                    defaultFrame = (FrameWidgetViewModel)_widgetViewModelFactory.Create(defaultFrameWidget);
                     frames.Add(defaultFrame);
                 }
 
-                var widget = new Widget();
-                widget.Type = WidgetType.Frame;
-                widget.Label = "";
-                widget.WidgetId = DefaultFrameId;
-                widget.Widgets = nonFrameWidgets;
-                defaultFrame.Update(widget);
+                defaultFrame.Update(defaultFrameWidget);
             }
 
             Frames = frames;

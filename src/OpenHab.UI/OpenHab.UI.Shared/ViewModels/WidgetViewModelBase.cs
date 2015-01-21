@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.UI;
+//using Coding4Fun.Toolkit.Controls.Common;
 using MetroLog;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Mvvm;
@@ -27,7 +29,9 @@ namespace OpenHab.UI.ViewModels
 
         private DelegateCommand _navigateCommand;
         private CancellationTokenSource _sendCancellationTokenSource;
+        private Task _sendTask;
         private bool _isSending;
+
         private Color? _valueColor;
         private Color? _labelColor;
 
@@ -38,17 +42,6 @@ namespace OpenHab.UI.ViewModels
         public INavigationService NavigationService { get; set; }
 
         public ILogger Log { get; set; }
-
-        public void Update(Widget widget)
-        {
-            Debug.Assert(widget != null);
-            Debug.Assert(_widget == null || _widget.WidgetId == widget.WidgetId);
-            Debug.Assert(_widget == null || _widget.Type == widget.Type);
-
-            _widget = widget;
-
-            OnModelUpdated();
-        }
 
         public string WidgetId
         {
@@ -130,18 +123,26 @@ namespace OpenHab.UI.ViewModels
         static readonly Regex LabelRegex = new Regex(".*(?<value>\\[.*\\]).*", 
             RegexOptions.Singleline | RegexOptions.CultureInvariant);
 
+        public void Update(Widget widget)
+        {
+            Debug.Assert(widget != null);
+            Debug.Assert(_widget == null || _widget.WidgetId == widget.WidgetId);
+            Debug.Assert(_widget == null || _widget.Type == widget.Type);
+
+            _widget = widget;
+
+            OnModelUpdated();
+        }
+
         protected virtual void OnModelUpdated()
         {
             ParseLabel();
 
-            if (!string.IsNullOrEmpty(_widget.LabelColor))
-                LabelColor = ColorConverter.Parse(_widget.LabelColor);
-
-            if (!string.IsNullOrEmpty(_widget.ValueColor))
-                ValueColor = ColorConverter.Parse(_widget.ValueColor);
-
             Icon = _widget.Icon;
             IsLinked = _widget.LinkedPage != null;
+
+            LabelColor = ParseColor(_widget.LabelColor);
+            ValueColor = ParseColor(_widget.ValueColor);
         }
 
         private void ParseLabel()
@@ -181,19 +182,24 @@ namespace OpenHab.UI.ViewModels
             if (_widget.Item == null)
                 throw new InvalidOperationException("Widget isn't bound to any item");
 
+            // previous command is still working. what shall we do ?
+            if (_sendCancellationTokenSource != null)
+                _sendCancellationTokenSource.Cancel();
+
             _sendCancellationTokenSource = new CancellationTokenSource();
 
             IsSending = true;
-            Task.Run(async () =>
+            _sendTask = Task.Run(async () =>
             {
                 //await client.SendItemCommand(_widget.Item, command, _sendCancellationTokenSource.Token);
                 await client.SendItemCommand(_widget.Item, command, _sendCancellationTokenSource.Token);
-            })
+            },_sendCancellationTokenSource.Token)
                 .ContinueWith(
                     t =>
                     {
                         IsSending = false;
                         _sendCancellationTokenSource = null;
+                        _sendTask = null;
 
                         if (t.IsCanceled)
                             return;
@@ -216,6 +222,33 @@ namespace OpenHab.UI.ViewModels
         {
             if (_sendCancellationTokenSource != null)
                 _sendCancellationTokenSource.Cancel();
+        }
+
+        private Color? ParseColor(string text)
+        {
+            if (!string.IsNullOrEmpty(text))
+            {
+                //LabelColor = ColorConverter.Parse(_widget.LabelColor);
+
+                Color color;
+                if (WinRTXamlToolkit.Imaging.ColorExtensions.TryFromString(text, out color))
+                    return color;
+            }
+            return null;
+        }
+
+        protected double? ParseNumberValue(string text)
+        {
+            int number;
+            if (Int32.TryParse(text, NumberStyles.Integer, CultureInfo.CurrentCulture, out number))
+                return number;
+            
+            if (text == "OFF")
+                return 0;
+            if (text == "ON")
+                return 100;
+
+            return null;
         }
     }
 }

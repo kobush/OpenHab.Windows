@@ -11,6 +11,7 @@
     xmlns:helpers="using:OpenHab.UI.Helpers"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:controls="using:WinRTXamlToolkit.Controls"
+    xmlns:controls1="using:OpenHab.UI.Controls"
     mc:Ignorable="d"
     RequestedTheme="Light"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
@@ -39,6 +40,10 @@
         <Style x:Key="WidgetLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource ListViewItemTextBlockStyle}">
             <Setter Property="FontSize" Value="22" />
             <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        </Style>
+
+        <Style x:Key="WidgetValueStyle" TargetType="TextBlock" BasedOn="{StaticResource ListViewItemTextBlockStyle}">
+            <Setter Property="FontSize" Value="22" />
         </Style>
 
         <Style x:Key="WidgetLinkChevronStyle" TargetType="ContentControl">
@@ -172,6 +177,49 @@
             </Border>
         </DataTemplate>
 
+        
+        <DataTemplate x:Key="SliderWidgetTemplate">
+
+            <Border Style="{StaticResource WidgetBorderStyle}" d:DesignWidth="410.5"
+                    d:DataContext="{d:DesignInstance viewModels:SliderWidgetViewModel}">
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Image Grid.RowSpan="2" VerticalAlignment="Top"
+                           Style="{StaticResource WidgetIconStyle}">
+                        <Image.Source>
+                            <BitmapImage UriSource="{Binding IconUrl}" />
+                        </Image.Source>
+                    </Image>
+
+                    <TextBlock Text="{Binding Label}" Style="{StaticResource WidgetLabelStyle}" 
+                               Margin="0,6,6,0" Grid.Row="0" Grid.Column="1" VerticalAlignment="Top" />
+
+                    <TextBlock Style="{StaticResource WidgetValueStyle}" Margin="0,6,6,0" Grid.Column="2" Grid.Row="0" VerticalAlignment="Top" HorizontalAlignment="Right" 
+                               Text="{Binding PercentValue, Converter={StaticResource StringFormatConverter}, ConverterParameter=\{0:F0\}}" 
+                               Visibility="{Binding Value, Converter={StaticResource NotEmptyToVisibilityConverter}}"
+                               Foreground="{Binding ValueColor, Converter={StaticResource ColorToBrushConverter}, ConverterParameter={StaticResource WidgetLabelForeground}}"/>
+
+                    <Slider Grid.ColumnSpan="3" Grid.Column="0" Grid.Row="1" Margin="8,0,8,4" Height="44"
+                            Minimum="0" Maximum="100" Value="{Binding PercentValue, Mode=TwoWay}" >
+                        <interactivity:Interaction.Behaviors>
+                            <helpers:DeferredSliderUpdateBehavior 
+                                Command="{Binding UpdateValueCommand}" Delay="0:0:0.200"/>
+                        </interactivity:Interaction.Behaviors>
+                    </Slider>
+                </Grid>
+            </Border>
+        </DataTemplate>
+        
         <DataTemplate x:Key="RollerShutterWidgetTemplate">
 
             <Border Style="{StaticResource WidgetBorderStyle}" d:DesignWidth="410.5" >
@@ -225,8 +273,8 @@
                                    GroupWidgetTemplate="{StaticResource GroupWidgetTemplate}"
                                    TextWidgetTemplate="{StaticResource TextWidgetTemplate}"
                                    SwitchWidgetTemplate="{StaticResource SwitchWidgetTemplate}"
+                                   SliderWidgetTemplate="{StaticResource SliderWidgetTemplate}"
                                    RollerShutterWidgetTemplate="{StaticResource RollerShutterWidgetTemplate}"/>
-
 
         <DataTemplate x:Key="HubHeaderTemplate" >
             <TextBlock Text="{Binding Converter={StaticResource CaseConverter}}"/>

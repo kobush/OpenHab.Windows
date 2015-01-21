@@ -150,6 +150,10 @@ namespace OpenHab.Client
                     }
                 }
             }
+            catch (TaskCanceledException)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 throw new Exception("POST request failed", ex);

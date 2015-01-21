@@ -83,7 +83,9 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Controls\ExtendedSlider.cs" />
     <Compile Include="Helpers\ContentDialogHelper.cs" />
+    <Compile Include="Helpers\DeferredSliderUpdateBehavior.cs" />
     <Compile Include="Helpers\StatusBarBehavior.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>

@@ -1,4 +1,5 @@
-﻿using Microsoft.Practices.Prism.Mvvm;
+﻿using Windows.UI.Xaml.Controls;
+using Microsoft.Practices.Prism.Mvvm;
 
 namespace OpenHab.UI.Views
 {

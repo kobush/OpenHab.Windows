@@ -1,4 +1,3 @@
-using System;
 using System.Windows.Input;
 using Microsoft.Practices.Prism.Commands;
 
@@ -17,11 +16,7 @@ namespace OpenHab.UI.ViewModels
 
             if (Widget.Item != null)
             {
-                int number;
-                if (Int32.TryParse(Widget.Item.State, out number))
-                    PercentValue = number;
-                else
-                    PercentValue = 0;
+                PercentValue = ParseNumberValue(Widget.Item.State) ?? 0.0;
             }
         }
 

@@ -44,5 +44,10 @@ namespace OpenHab.Client
         public Page LinkedPage { get; set; }
 
         // TODO: add mappings
+        public bool HasMappings
+        {
+            get { return false; }
+        }
+
     }
 }

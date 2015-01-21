@@ -22,6 +22,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\ColorToBrushConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\HubBinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\NotNullToVisibilityConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helpers\StringFormatConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Settings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SettingsManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\ChartWidgetViewModel.cs" />
@@ -31,7 +32,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\IWidgetViewModelFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\PageToken.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\RollerShutterWidgetViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SectionSwitchWidgetViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SettingsPageViewModel.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SliderWidgetViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SwitchWidgetViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\TextWidgetViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\WidgetViewModelBase.cs" />

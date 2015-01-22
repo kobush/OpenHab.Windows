@@ -11,10 +11,12 @@
     			<ResourceDictionary Source="ms-appx:///Resources/ToggleSwitchStyle.xaml"/>
     			<ResourceDictionary Source="ms-appx:///Resources/FlatButtonStyle.xaml"/>
     		</ResourceDictionary.MergedDictionaries>
+            
     		<helpers:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     		<helpers:BooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter" Inverse="True" />
     		<helpers:BooleanInverseConverter x:Key="BooleanInverseConverter" />
-    		<helpers:CaseConverter x:Key="CaseConverter" />
+    		<helpers:CaseConverter x:Key="UpperCaseConverter" />
+    		<helpers:CaseConverter x:Key="LowerCaseConverter" ToLower="True" />
     		<helpers:NotEmptyToVisibilityConverter x:Key="NotEmptyToVisibilityConverter" />
 	        <helpers:ColorToBrushConverter x:Key="ColorToBrushConverter" />
             <helpers:StringFormatConverter x:Key="StringFormatConverter" />

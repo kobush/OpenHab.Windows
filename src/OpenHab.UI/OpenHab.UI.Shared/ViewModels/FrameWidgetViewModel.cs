@@ -16,7 +16,10 @@ namespace OpenHab.UI.ViewModels
         }
 
         // provides text to display as hub header
-        object IHubData.Header { get { return Label ?? ""; } }
+        object IHubData.Header
+        {
+            get { return Label ?? ""; }
+        }
 
         public IEnumerable<WidgetViewModelBase> Widgets
         {

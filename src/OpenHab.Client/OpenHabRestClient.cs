@@ -178,9 +178,9 @@ namespace OpenHab.Client
             return list != null ? list.Sitemap : Enumerable.Empty<Sitemap>();
         }
 
-        public async Task<Page> GetPage(Page page, CancellationToken cancellationToken)
+        public async Task<SitemapPage> GetPage(Page page, CancellationToken cancellationToken)
         {
-            return await MakeGetRequest<Page>(page.Link.PathAndQuery, cancellationToken);
+            return await MakeGetRequest<SitemapPage>(page.Link.PathAndQuery, cancellationToken);
         }
 
         public async Task SetItemState(Item item, string newState, CancellationToken cancellationToken)

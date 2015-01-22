@@ -13,6 +13,8 @@ namespace OpenHab.UI
         public DataTemplate TextWidgetTemplate { get; set; }
 
         public DataTemplate SwitchWidgetTemplate { get; set; }
+        
+        public DataTemplate SectionSwitchWidgetTemplate { get; set; }
 
         public DataTemplate SliderWidgetTemplate { get; set; }
 
@@ -31,6 +33,9 @@ namespace OpenHab.UI
 
             if (item is SwitchWidgetViewModel)
                 return SwitchWidgetTemplate;
+
+            if (item is SectionSwitchWidgetViewModel)
+                return SectionSwitchWidgetTemplate;
 
             if (item is SliderWidgetViewModel)
                 return SliderWidgetTemplate;

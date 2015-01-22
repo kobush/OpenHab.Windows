@@ -45,6 +45,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Sitemap.cs" />
     <Compile Include="Widget.cs" />
+    <Compile Include="WidgetMapping.cs" />
     <Compile Include="WidgetType.cs" />
   </ItemGroup>
   <ItemGroup>

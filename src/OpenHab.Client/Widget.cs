@@ -35,19 +35,22 @@ namespace OpenHab.Client
 
         public string Encoding { get; set; }
 
+        public Item Item { get; set; }
+
+        public LinkedPage LinkedPage { get; set; }
+
         [JsonProperty("widget")]
         [JsonConverter(typeof(SingleOrArrayConverter<Widget>))]
         public IList<Widget> Widgets { get; set; }
 
-        public Item Item { get; set; }
+        [JsonProperty("mapping")]
+        [JsonConverter(typeof(SingleOrArrayConverter<WidgetMapping>))]
+        public IList<WidgetMapping> Mappings { get; set; }
 
-        public Page LinkedPage { get; set; }
-
-        // TODO: add mappings
+        [JsonIgnore]
         public bool HasMappings
         {
-            get { return false; }
+            get { return Mappings != null && Mappings.Count > 0; }
         }
-
     }
 }

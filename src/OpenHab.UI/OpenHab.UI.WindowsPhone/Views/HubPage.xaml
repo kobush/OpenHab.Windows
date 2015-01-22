@@ -10,8 +10,8 @@
     xmlns:views="using:OpenHab.UI.Views"
     xmlns:helpers="using:OpenHab.UI.Helpers"
     xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
-    xmlns:controls="using:WinRTXamlToolkit.Controls"
-    xmlns:controls1="using:OpenHab.UI.Controls"
+    xmlns:toolkit="using:WinRTXamlToolkit.Controls"
+    xmlns:client="using:OpenHab.Client"
     mc:Ignorable="d"
     RequestedTheme="Light"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
@@ -70,7 +70,7 @@
 
         <DataTemplate x:Key="GroupWidgetTemplate">
             
-            <controls:ListItemButton
+            <toolkit:ListItemButton
                 d:DataContext="{d:DesignInstance viewModels:GroupWidgetViewModel}"
                 Command="{Binding NavigateCommand}" 
                 IsEnabled="{Binding IsLinked}"> 
@@ -99,12 +99,12 @@
                                         Visibility="{Binding IsLinked, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     </Grid>
                 </Border>
-            </controls:ListItemButton>
+            </toolkit:ListItemButton>
         </DataTemplate>
 
         <DataTemplate x:Key="TextWidgetTemplate">
             
-            <controls:ListItemButton
+            <toolkit:ListItemButton
                 d:DataContext="{d:DesignInstance viewModels:TextWidgetViewModel}"
                 Command="{Binding NavigateCommand}" 
                 IsEnabled="{Binding IsLinked}">
@@ -144,7 +144,7 @@
 
                     </Grid>
                 </Border>
-            </controls:ListItemButton>
+            </toolkit:ListItemButton>
         </DataTemplate>
 
         <DataTemplate x:Key="SwitchWidgetTemplate">
@@ -177,6 +177,56 @@
             </Border>
         </DataTemplate>
 
+        <DataTemplate x:Key="SectionSwitchWidgetTemplate">
+
+            <Border Style="{StaticResource WidgetBorderStyle}" d:DesignWidth="410.5"
+                    d:DataContext="{d:DesignInstance viewModels:SectionSwitchWidgetViewModel}">
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Image Grid.RowSpan="2" VerticalAlignment="Top"
+                           Style="{StaticResource WidgetIconStyle}">
+                        <Image.Source>
+                            <BitmapImage UriSource="{Binding IconUrl}" />
+                        </Image.Source>
+                    </Image>
+
+                    <TextBlock Text="{Binding Label}" Style="{StaticResource WidgetLabelStyle}" 
+                               Margin="0,6,6,0" Grid.Row="0" Grid.Column="1" VerticalAlignment="Top" />
+
+                    <ItemsControl ItemsSource="{Binding Mappings}" 
+                                  HorizontalAlignment="Stretch"
+                                  Grid.Row="1" Grid.Column="1" Margin="0,0,0,6" >
+                        
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <toolkit:WrapPanel Orientation="Horizontal" />
+                                <!--<StackPanel Orientation="Horizontal"/>-->
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate d:DataContext="{d:DesignInstance viewModels:WidgetMappingViewModel}">
+                                <ToggleButton BorderThickness="2.5" Margin="0,0,6,0" MinWidth="50" Height="55" MinHeight="0"
+                                              Content="{Binding Label, Converter={StaticResource LowerCaseConverter}}" 
+                                              Command="{Binding Command}" 
+                                              CommandParameter="{Binding .}"
+                                              IsChecked="{Binding IsChecked, Mode=OneWay}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </Grid>
+            </Border>
+        </DataTemplate>
+        
         
         <DataTemplate x:Key="SliderWidgetTemplate">
 
@@ -273,11 +323,12 @@
                                    GroupWidgetTemplate="{StaticResource GroupWidgetTemplate}"
                                    TextWidgetTemplate="{StaticResource TextWidgetTemplate}"
                                    SwitchWidgetTemplate="{StaticResource SwitchWidgetTemplate}"
+                                   SectionSwitchWidgetTemplate="{StaticResource SectionSwitchWidgetTemplate}"
                                    SliderWidgetTemplate="{StaticResource SliderWidgetTemplate}"
                                    RollerShutterWidgetTemplate="{StaticResource RollerShutterWidgetTemplate}"/>
 
         <DataTemplate x:Key="HubHeaderTemplate" >
-            <TextBlock Text="{Binding Converter={StaticResource CaseConverter}}"/>
+            <TextBlock Text="{Binding Converter={StaticResource UpperCaseConverter}}"/>
         </DataTemplate>
 
         <DataTemplate x:Key="HubSectionTemplate">
@@ -334,7 +385,7 @@
         
 
         <Hub x:Name="Hub" x:Uid="Hub" 
-             Header="{Binding PageTitle}"
+             Header="{Binding PageTitle, Converter={StaticResource LowerCaseConverter}}"
              helpers:HubBinder.DataSource="{Binding Frames}"
              helpers:HubBinder.HeaderTemplate="{StaticResource HubHeaderTemplate}"
              helpers:HubBinder.SectionTemplate="{StaticResource HubSectionTemplate}">

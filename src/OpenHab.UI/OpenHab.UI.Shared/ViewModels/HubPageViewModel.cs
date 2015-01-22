@@ -148,7 +148,7 @@ namespace OpenHab.UI.ViewModels
             Task.Run(async () =>
             {
 
-                Page page = null;
+                SitemapPage page = null;
                 if (IsHomepage)
                 {
                     // load home page
@@ -183,7 +183,7 @@ namespace OpenHab.UI.ViewModels
             }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
-        private void ProcessPage(Page page)
+        private void ProcessPage(SitemapPage page)
         {
             PageTitle = page.Title;
 

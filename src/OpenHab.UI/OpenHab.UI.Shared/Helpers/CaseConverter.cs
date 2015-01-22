@@ -6,20 +6,15 @@ namespace OpenHab.UI.Helpers
 {
     public class CaseConverter : ValueConverter
     {
+        public bool ToLower { get; set; }
+
         public override object Convert(object value, Type targetType, object parameter, CultureInfo culture, string language)
         {
             string text = value as string;
             if (text != null)
-            {
-                return text.ToUpper();
-            }
+                return (ToLower) ? text.ToLower() : text.ToUpper();
 
             return "";
-        }
-
-        public override object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture, string language)
-        {
-            throw new NotSupportedException();
         }
     }
 }

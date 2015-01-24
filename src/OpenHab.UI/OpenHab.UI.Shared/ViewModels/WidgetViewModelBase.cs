@@ -39,6 +39,9 @@ namespace OpenHab.UI.ViewModels
         public ISettingsManager SettingsManager { get; set; }
 
         [Dependency]
+        public IConnectionTracker ConnectionTracker { get; set; }
+
+        [Dependency]
         public INavigationService NavigationService { get; set; }
 
         public ILogger Log { get; set; }
@@ -175,10 +178,6 @@ namespace OpenHab.UI.ViewModels
 
         protected void SendItemCommand(string command)
         {
-            var settings = SettingsManager.CurrentSettings;
-            var baseUri = settings.ResolveLocalUri();
-            var client = new OpenHabRestClient(baseUri);
-
             if (_widget.Item == null)
                 throw new InvalidOperationException("Widget isn't bound to any item");
 
@@ -189,10 +188,11 @@ namespace OpenHab.UI.ViewModels
             _sendCancellationTokenSource = new CancellationTokenSource();
 
             IsSending = true;
-            _sendTask = Task.Run(async () =>
+            _sendTask = Task.Run(() =>
             {
-                //await client.SendItemCommand(_widget.Item, command, _sendCancellationTokenSource.Token);
-                await client.SendItemCommand(_widget.Item, command, _sendCancellationTokenSource.Token);
+                return ConnectionTracker.Execute(async client => 
+                    await client.SendItemCommand(_widget.Item, command, _sendCancellationTokenSource.Token));
+
             },_sendCancellationTokenSource.Token)
                 .ContinueWith(
                     t =>

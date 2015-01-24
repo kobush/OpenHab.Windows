@@ -314,16 +314,16 @@ namespace OpenHab.UI.ViewModels
                 return;
             }
 
-            var names = connectionProfile.GetNetworkNames().ToArray();
-
-            DiscoverMessage = string.Format("Searching for openHAB services on network '{0}'. Please wait.", connectionProfile.ProfileName);
+            DiscoverMessage = string.Format("Searching openHAB services on network \"{0}\". Please wait...", 
+                connectionProfile.ProfileName);
             IsSearching = true;
 
             _discoverCancellationTokenSource = new CancellationTokenSource();
 
             // find services
             Task.Run(() => ZeroconfResolver.ResolveAsync(new[] { OpenHabHttpProtocol, OpenHabHttpsProtocol }, 
-                    scanTime: TimeSpan.FromSeconds(3),
+                    scanTime: TimeSpan.FromSeconds(5),
+                    retries: 2, 
                     cancellationToken: _discoverCancellationTokenSource.Token))
                 .ContinueWith(t =>
                 {
@@ -340,20 +340,22 @@ namespace OpenHab.UI.ViewModels
                         Log.Warn("Error searching for servers", t.Exception);
                     }
 
-                    if (t.IsFaulted || t.Result.Count == 0)
-                    {
-                        DiscoverMessage =
-                            "No services found. Make sure you are connected to your LAN network, and that UDP port 5353 is not blocked by server's firewall.";
-                    }
-                    else
+                    if (!t.IsFaulted)
                     {
                         var services = (from host in t.Result 
                                         from service in host.Services.Values
                                         select new HostServiceViewModel(host, service)).ToList();
 
-                        DiscoveredServers = new ObservableCollection<HostServiceViewModel>(services);
-                        DiscoverMessage = string.Format("Found {0} service(s). Please select:", services.Count);
+                        if (services.Count > 0)
+                        {
+                            DiscoveredServers = new ObservableCollection<HostServiceViewModel>(services);
+                            DiscoverMessage = string.Format("Found {0} service(s). Please select:", services.Count);
+                            return;
+                        }
                     }
+
+                    DiscoverMessage = "No services found. Make sure you are connected to your LAN network, and that UDP port 5353 is not blocked by server's firewall.";
+
                 }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 

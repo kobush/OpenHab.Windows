@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.UI.Popups;
 using Windows.UI.Xaml.Navigation;
+using MetroLog;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Mvvm;
 using Microsoft.Practices.Prism.Mvvm.Interfaces;
@@ -25,6 +26,8 @@ namespace OpenHab.UI.ViewModels
 
     public class HubPageViewModel : ViewModel
     {
+        private readonly ILogger Log;
+
         private readonly ISettingsManager _settingsManager;
         private readonly IConnectionTracker _connectionTracker;
         private readonly INavigationService _navigationService;
@@ -47,6 +50,7 @@ namespace OpenHab.UI.ViewModels
         private const string DefaultFrameId = "__default_frame__";
 
         public HubPageViewModel(
+            ILogManager logManager,
             ISettingsManager settingsManager,
             IConnectionTracker connectionTracker,
             INavigationService navigationService,
@@ -54,6 +58,8 @@ namespace OpenHab.UI.ViewModels
             IEventAggregator eventAggregator,
             IPromptService promptService)
         {
+            Log = logManager.GetLogger<HubPageViewModel>();
+
             _settingsManager = settingsManager;
             _connectionTracker = connectionTracker;
             _navigationService = navigationService;
@@ -71,6 +77,7 @@ namespace OpenHab.UI.ViewModels
         {
             get { return (_settingsCommand) ?? (_settingsCommand = new DelegateCommand(OpenSettingsPage)); }
         }
+
         public object HomepageCommand
         {
             get { return (_homepageCommand) ?? (_homepageCommand = new DelegateCommand(OpenHomePage)); }
@@ -119,12 +126,9 @@ namespace OpenHab.UI.ViewModels
             _parameters = navigationParameter as HubPageParameters;
             IsHomepage = (_parameters == null || _parameters.IsHomepage);
 
-            _eventAggregator.GetEvent<SettingsChangedEvent>()
-                .Subscribe(OnSettingsChanged, ThreadOption.UIThread, false);
-            _eventAggregator.GetEvent<OpenHabConnected>()
-                .Subscribe(OnConnected, ThreadOption.UIThread, false);
-            _eventAggregator.GetEvent<OpenHabDisconnected>()
-                .Subscribe(OnDisconnected, ThreadOption.UIThread, false);
+            _eventAggregator.GetEvent<SettingsChangedEvent>().Subscribe(OnSettingsChanged, ThreadOption.UIThread, false);
+            _eventAggregator.GetEvent<OpenHabConnected>().Subscribe(OnConnected, ThreadOption.UIThread, false);
+            _eventAggregator.GetEvent<OpenHabDisconnected>().Subscribe(OnDisconnected, ThreadOption.UIThread, false);
 
             if (!_connectionTracker.IsConnected)
             {
@@ -135,6 +139,29 @@ namespace OpenHab.UI.ViewModels
             {
                 LoadPage();
             }
+        }
+
+        public override void OnNavigatedFrom(Dictionary<string, object> viewModelState, bool suspending)
+        {
+            base.OnNavigatedFrom(viewModelState, suspending);
+
+            if (_loadingCancellationTokenSource != null)
+            {
+                _loadingCancellationTokenSource.Cancel();
+                _loadingCancellationTokenSource = null;
+            }
+
+            _eventAggregator.GetEvent<SettingsChangedEvent>().Unsubscribe(OnSettingsChanged);
+            _eventAggregator.GetEvent<OpenHabConnected>().Unsubscribe(OnConnected);
+            _eventAggregator.GetEvent<OpenHabDisconnected>().Unsubscribe(OnDisconnected);
+        }
+
+        private void OnConnected(OpenHabConnectedPayload e)
+        {
+            _promptService.ShowNotification(e.Message, "");
+
+            IsConnecting = false;
+            LoadPage();
         }
 
         private void OnDisconnected(OpenHabDisconnectedPayload e)
@@ -149,28 +176,6 @@ namespace OpenHab.UI.ViewModels
                 });
         }
 
-        private void OnConnected(OpenHabConnectedPayload e)
-        {
-            _promptService.ShowNotification(e.Message, "");
-
-            IsConnecting = false;
-            LoadPage();
-        }
-
-        public override void OnNavigatedFrom(Dictionary<string, object> viewModelState, bool suspending)
-        {
-            base.OnNavigatedFrom(viewModelState, suspending);
-
-            if (_loadingCancellationTokenSource != null)
-            {
-                _loadingCancellationTokenSource.Cancel();
-                _loadingCancellationTokenSource = null;
-            }
-
-            _eventAggregator.GetEvent<SettingsChangedEvent>()
-                .Unsubscribe(OnSettingsChanged);
-        }
-
         private void OnSettingsChanged(Settings settings)
         {
             LoadPage();
@@ -182,36 +187,68 @@ namespace OpenHab.UI.ViewModels
             var settings = _settingsManager.CurrentSettings;
             if (settings == null)
             {
-                //TODO: display error or navigate to config
+                Log.Warn("Settings not set");
                 return;
             }
-
-            var baseUri = settings.ResolveLocalUri();
-            var client = new OpenHabRestClient(baseUri);
 
             _loadingCancellationTokenSource = new CancellationTokenSource();
 
             IsLoading = true;
-            Task.Run(async () =>
+            if (!IsHomepage)
             {
+                // it's regular page
+                ReloadPage(_parameters.Page);
+                return;
+            }
 
-                SitemapPage page = null;
-                if (IsHomepage)
-                {
-                    // load home page
-                    var allSitempas = (await client.GetSitemaps(_loadingCancellationTokenSource.Token)).ToArray();
-                    var sitemap = allSitempas.FirstOrDefault(s => s.Name == settings.Sitemap) ??
-                                  allSitempas.FirstOrDefault();
+            // this is Homepage so load sitemap list first
+            Task.Run(() =>
+            {
+                return _connectionTracker.Execute(async client =>
+                    (await client.GetSitemaps(_loadingCancellationTokenSource.Token)).ToArray());
 
-                    page = await client.GetPage(sitemap.Homepage, _loadingCancellationTokenSource.Token);
-                }
-                else
-                {
-                    // load sub-page
-                    page = await client.GetPage(_parameters.Page, _loadingCancellationTokenSource.Token);
-                }
-                
-                return page;
+            }, _loadingCancellationTokenSource.Token)
+                .ContinueWith(
+                    t =>
+                    {
+                        Sitemap[] allSitemaps = t.Result;
+
+                        if (allSitemaps.Length == 0)
+                        {
+                            _promptService.ShowError("No sitemap", "openHAB doesn't have any sitemaps configured",
+                                null);
+                            return;
+                        }
+
+                        var sitemap = allSitemaps.FirstOrDefault(s => s.Name == settings.Sitemap);
+                        if (sitemap != null)
+                        {
+                            // Found configured sitemap 
+                            ReloadPage(sitemap.Homepage);
+                            return;
+                        }
+
+                        if (allSitemaps.Length == 1)
+                        {
+                            // Only one sitemap defined so use it
+                            sitemap = allSitemaps[0];
+                            ReloadPage(sitemap.Homepage);
+                            return;
+                        }
+
+
+                        // Need to show sitemap selection screen first
+
+                    }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        private void ReloadPage(Page page)
+        { 
+            Log.Debug("Loading page {0} from {1}", page.Id, page.Link);
+
+            Task.Run(() =>
+            {
+                return _connectionTracker.Execute(client=> client.GetPage(page, _loadingCancellationTokenSource.Token));
 
             }, _loadingCancellationTokenSource.Token)
             .ContinueWith(t =>
@@ -224,8 +261,7 @@ namespace OpenHab.UI.ViewModels
                 if (t.IsFaulted)
                     return;
                 
-                var page = t.Result;
-                ProcessPage(page);
+                ProcessPage(t.Result);
 
             }, TaskScheduler.FromCurrentSynchronizationContext());
         }

@@ -5,10 +5,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+
 using Windows.UI.Xaml.Navigation;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Mvvm;
 using Microsoft.Practices.Prism.Mvvm.Interfaces;
+
 using OpenHab.Client;
 using OpenHab.UI.Services;
 using Zeroconf;
@@ -44,8 +46,9 @@ namespace OpenHab.UI.ViewModels
         private CancellationTokenSource _discoverCancellationTokenSource;
         private string _discoverMessage;
         private bool _isSearching;
-        private bool _showDiscoverPopup;
-        private IEnumerable<IZeroconfHost> _discoveredServers;
+        private bool _showDiscoverDialog;
+        private IEnumerable<HostServiceViewModel> _discoveredServers;
+        private HostServiceViewModel _selectedHostService;
 
 
         public SettingsPageViewModel(ISettingsManager settingsManager, INavigationService navigationService)
@@ -66,7 +69,7 @@ namespace OpenHab.UI.ViewModels
 
         public ICommand DiscoverServerCommand
         {
-            get { return (_discoverServerCommand) ?? (_discoverServerCommand = new DelegateCommand(DiscoverServer)); }
+            get { return (_discoverServerCommand) ?? (_discoverServerCommand = new DelegateCommand(DiscoverServer, CanExecuteDiscoverServer)); }
         }
 
         public ICommand DiscoverCancelCommand
@@ -75,7 +78,7 @@ namespace OpenHab.UI.ViewModels
         }
         public ICommand DiscoverAcceptCommand
         {
-            get { return (_discoverAcceptCommand) ?? (_discoverAcceptCommand = new DelegateCommand(AcceptDiscoverServer)); }
+            get { return (_discoverAcceptCommand) ?? (_discoverAcceptCommand = new DelegateCommand(AcceptDiscoverServer, CanAcceptDiscoverServer)); }
         }
 
         public string Hostname
@@ -129,7 +132,13 @@ namespace OpenHab.UI.ViewModels
         public bool IsConnecting
         {
             get { return _isConnecting; }
-            private set { SetProperty(ref _isConnecting, value); }
+            private set
+            {
+                if (SetProperty(ref _isConnecting, value))
+                {
+                    _discoverServerCommand.RaiseCanExecuteChanged();
+                }
+            }
         }
 
         public string ConnectionMessage
@@ -150,16 +159,28 @@ namespace OpenHab.UI.ViewModels
             private set { SetProperty(ref _isSearching, value); }
         }
 
-        public bool ShowDiscoverPopup
+        public bool ShowDiscoverDialog
         {
-            get { return _showDiscoverPopup; }
-            set { SetProperty(ref _showDiscoverPopup, value); }
+            get { return _showDiscoverDialog; }
+            set { SetProperty(ref _showDiscoverDialog, value); }
         }
 
-        public IEnumerable<IZeroconfHost> DiscoveredServers
+        public IEnumerable<HostServiceViewModel> DiscoveredServers
         {
             get { return _discoveredServers; }
             private set { SetProperty(ref _discoveredServers, value); }
+        }
+
+        public HostServiceViewModel SelectedHostService
+        {
+            get { return _selectedHostService; }
+            set
+            {
+                if (SetProperty(ref _selectedHostService, value))
+                {
+                    _discoverAcceptCommand.RaiseCanExecuteChanged();
+                }
+            }
         }
 
         public override void OnNavigatedTo(object navigationParameter, NavigationMode navigationMode, Dictionary<string, object> viewModelState)
@@ -258,23 +279,29 @@ namespace OpenHab.UI.ViewModels
                 _navigationService.Navigate("Hub", new HubPageParameters {IsHomepage = true});
         }
 
+        private bool CanExecuteDiscoverServer()
+        {
+            return !IsConnecting;
+        }
 
 
         private void DiscoverServer()
         {
             CloseDiscoverDialog();
 
-            const string httpProtocol = "_openhab-server._tcp";
-            const string httpsProtocol = "_openhab-server-ssl._tcp.local";
-
-            ShowDiscoverPopup = true;
-            IsSearching = true;
+            SelectedHostService = null;
+            DiscoveredServers = null;
             DiscoverMessage = "Searching for openHAB services, please wait ...";
+            ShowDiscoverDialog = true;
+            IsSearching = true;
 
             _discoverCancellationTokenSource = new CancellationTokenSource();
 
+            const string httpProtocol = "_openhab-server._tcp.local";
+            const string httpsProtocol = "_openhab-server-ssl._tcp.local";
+
             // find services
-            Task.Run(() => ZeroconfResolver.ResolveAsync(httpProtocol, 
+            Task.Run(() => ZeroconfResolver.ResolveAsync(new[] { httpProtocol, httpsProtocol }, 
                     scanTime: TimeSpan.FromSeconds(3),
                     cancellationToken: _discoverCancellationTokenSource.Token))
                 .ContinueWith(t =>
@@ -289,15 +316,18 @@ namespace OpenHab.UI.ViewModels
 
                     if (t.Result.Count == 0)
                     {
-                        DiscoverMessage = "None services found. Make sure UDP port 5353 is not blocked by server's firewall.";
+                        DiscoverMessage =
+                            "No services found. Make sure UDP port 5353 is not blocked by server's firewall.";
                     }
                     else
                     {
-                        DiscoverMessage = string.Format("Found {0} service(s).", t.Result.Count);
+                        var services = (from host in t.Result 
+                                        from service in host.Services.Values
+                                        select new HostServiceViewModel(host, service)).ToList();
 
-                        DiscoveredServers = t.Result;
+                        DiscoveredServers = new ObservableCollection<HostServiceViewModel>(services);
+                        DiscoverMessage = string.Format("Found {0} service(s). Please select:", services.Count);
                     }
-
                 }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
@@ -309,16 +339,49 @@ namespace OpenHab.UI.ViewModels
                 _discoverCancellationTokenSource = null;
             }
 
-            ShowDiscoverPopup = false;
+            ShowDiscoverDialog = false;
         }
+
+        private bool CanAcceptDiscoverServer()
+        {
+            return SelectedHostService != null;
+        }
+
 
         private void AcceptDiscoverServer()
         {
-            //TODO: get selected server
+            if (SelectedHostService != null)
+            {
+                Hostname = SelectedHostService.IPAddress;
+                PortNumber = SelectedHostService.PortNumber.ToString();
+                UseHttps = SelectedHostService.ServiceName.Contains("ssl");
+            }
             
-
             CloseDiscoverDialog();
         }
 
+    }
+
+    public class HostServiceViewModel : BindableBase
+    {
+        public HostServiceViewModel(IZeroconfHost host, IService service)
+        {
+            IPAddress = host.IPAddress;
+            PortNumber = service.Port;
+
+            ServiceName = service.Name;
+            //Url = service.Value.Properties[s].
+        }
+
+        public string DisplayName
+        {
+            get { return string.Format("{0}:{1}", IPAddress, PortNumber); }
+        }
+
+        public int PortNumber { get; private set; }
+
+        public string IPAddress { get; private set; }
+
+        public string ServiceName { get; private set; }
     }
 }

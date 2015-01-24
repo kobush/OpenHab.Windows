@@ -44,7 +44,7 @@
                          IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
                          Text="{Binding Hostname, Mode=TwoWay}"/>
                 
-                <TextBox Header="Port number (e.g. 8080)" 
+                <TextBox Header="PortNumber number (e.g. 8080)" 
                          PlaceholderText="Enter port number" InputScope="Number" MaxLength="10"
                          IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
                          Text="{Binding PortNumber, Mode=TwoWay}"/>
@@ -88,25 +88,46 @@
 
         </ScrollViewer>
         
-        <ContentDialog helpers:ContentDialogHelper.IsOpen="{Binding ShowDiscoverPopup, Mode=TwoWay}"
-                       FullSizeDesired="True" Title="Server discovery"
+        <ContentDialog helpers:ContentDialogHelper.IsOpen="{Binding ShowDiscoverDialog, Mode=TwoWay}"
+                       FullSizeDesired="True" 
                        PrimaryButtonText="OK"
                        IsPrimaryButtonEnabled="{Binding IsSearching, Converter={StaticResource BooleanInverseConverter}}"
                        PrimaryButtonCommand="{Binding DiscoverAcceptCommand}"
                        SecondaryButtonText="Cancel" 
                        SecondaryButtonCommand="{Binding DiscoverCancelCommand}">
 
-            <StackPanel Margin="12">
+            <ContentDialog.Title>
+                <TextBlock Text="Server discovery" Style="{ThemeResource MessageDialogTitleStyle}" />
+            </ContentDialog.Title>
+            
+            <Grid Margin="12" VerticalAlignment="Stretch">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
                     
                 <TextBlock Text="{Binding DiscoverMessage}"  
-                           TextWrapping="Wrap" Style="{StaticResource BaseTextBlockStyle}" />
+                           TextWrapping="Wrap" Style="{StaticResource BodyTextBlockStyle}" />
                     
-                <ProgressRing IsActive="{Binding IsSearching}" Margin="0,140,0,0" HorizontalAlignment="Center" Background="Transparent"
+                <ProgressRing Grid.RowSpan="2" IsActive="{Binding IsSearching}" Margin="0,140,0,0" HorizontalAlignment="Center" Background="Transparent"
                               Visibility="{Binding IsSearching, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                     
-                <ListBox ItemsSource="{Binding DiscoveredServers}"/>
+                <ListBox Grid.Row="1" ItemsSource="{Binding DiscoveredServers}" Margin="0,10,0,20"
+                         SelectedItem="{Binding SelectedHostService, Mode=TwoWay}"
+                         SelectionMode="Single"
+                         Visibility="{Binding IsSearching, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
                     
-            </StackPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel>
+                                <TextBlock Text="{Binding DisplayName}" Style="{ThemeResource TitleTextBlockStyle}"/>
+                                <TextBlock Text="{Binding ServiceName}" Style="{ThemeResource BodyTextBlockStyle}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                    
+            </Grid>
 
 
         </ContentDialog>

@@ -70,7 +70,7 @@
                               IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"/>
 
                 <StackPanel Orientation="Horizontal">
-                    <Button Content="test connection" Command="{Binding TestConnectionCommand}" />
+                    <Button Content="connect" Command="{Binding TestConnectionCommand}" />
                     <TextBlock Text="{Binding ConnectionMessage}" 
                                Margin="12,11,0,12" VerticalAlignment="Center"
                                Style="{StaticResource BodyTextBlockStyle}" />
@@ -79,10 +79,10 @@
                 <ProgressBar IsIndeterminate="{Binding IsConnecting}" 
                              Visibility="{Binding IsConnecting, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-                <ComboBox Header="Sitemap" PlaceholderText="Select sitemap" 
+                <!--<ComboBox Header="Sitemap" PlaceholderText="Select sitemap" 
                           ItemsSource="{Binding Sitemaps}" DisplayMemberPath="Name" 
                           SelectedValue="{Binding Sitemap, Mode=TwoWay}"
-                          SelectedValuePath="Name"/>
+                          SelectedValuePath="Name"/>-->
                 
             </StackPanel>
 

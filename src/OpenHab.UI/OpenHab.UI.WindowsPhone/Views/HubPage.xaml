@@ -360,7 +360,7 @@
             
             <CommandBar.PrimaryCommands>
 
-                <AppBarButton Command="{Binding HomepageCommand}" 
+                <AppBarButton Command="{Binding OpenHomepageCommand}" 
                               Label="homepage" Icon="Home"
                               Visibility="{Binding IsHomepage, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
 
@@ -370,8 +370,12 @@
             </CommandBar.PrimaryCommands>
             <CommandBar.SecondaryCommands>
                 
-                <AppBarButton Command="{Binding SettingsCommand}" 
-                          Label="settings" Icon="Setting"/>
+                <AppBarButton Command="{Binding OpenSettingsCommand}" 
+                              Label="settings" Icon="Setting"/>
+                <AppBarButton Command="{Binding OpenSitemapDialogCommand}" 
+                              Label="select sitemap" 
+                              Visibility="{Binding IsHomepage, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                
             </CommandBar.SecondaryCommands>
         </CommandBar>
     </Page.BottomAppBar>
@@ -403,6 +407,38 @@
         </StackPanel>
         
         <TextBlock Opacity="0.8" IsHitTestVisible="False" Text="{Binding LastUpdateTime}" VerticalAlignment="Bottom" Margin="12" TextAlignment="Right"/>
-    </Grid>
 
+
+        <ContentDialog helpers:ContentDialogHelper.IsOpen="{Binding ShowSitemapDialog, Mode=TwoWay}"
+                       FullSizeDesired="False" 
+                       PrimaryButtonText="OK"
+                       PrimaryButtonCommand="{Binding SitemapAcceptCommand}"
+                       SecondaryButtonText="Cancel" 
+                       SecondaryButtonCommand="{Binding SitemapCancelCommand}">
+
+            <ContentDialog.Title>
+                <TextBlock Text="Select sitemap" Style="{ThemeResource MessageDialogTitleStyle}" />
+            </ContentDialog.Title>
+
+            <Grid>
+                <ListBox Margin="0,10,0,20"
+                     VerticalAlignment="Top"
+                     ItemsSource="{Binding Sitemaps}" 
+                     SelectedItem="{Binding SelectedSitemap, Mode=TwoWay}"
+                     SelectionMode="Single" 
+                     Background="Transparent" BorderBrush="Black" 
+                     BorderThickness="2.5" Padding="2.5">
+
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" Style="{ThemeResource TitleTextBlockStyle}"/>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </Grid>
+
+        </ContentDialog>
+        
+    </Grid>
+    
 </Page>

@@ -145,12 +145,9 @@ namespace OpenHab.UI.Helpers
 
         private static void OnIsVisibleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            ProgressBehavior behavior = (ProgressBehavior)d;
-
             bool isvisible = (bool)e.NewValue;
             if (isvisible)
             {
-                StatusBar.GetForCurrentView().ProgressIndicator.Text = behavior.Text;
                 StatusBar.GetForCurrentView().ProgressIndicator.ShowAsync();
             }
             else

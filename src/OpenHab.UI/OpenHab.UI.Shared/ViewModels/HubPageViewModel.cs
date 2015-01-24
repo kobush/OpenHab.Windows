@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -26,6 +25,9 @@ namespace OpenHab.UI.ViewModels
 
     public class HubPageViewModel : ViewModel
     {
+        #region Fields
+
+        private const string DefaultFrameId = "__default_frame__";
         private readonly ILogger Log;
 
         private readonly ISettingsManager _settingsManager;
@@ -38,6 +40,9 @@ namespace OpenHab.UI.ViewModels
         private DelegateCommand _connectCommand;
         private DelegateCommand _settingsCommand;
         private DelegateCommand _homepageCommand;
+        private ICommand _openSitemapDialogCommand;
+        private ICommand _sitemapAcceptCommand;
+        private ICommand _sitemapCancelCommand;
 
         private string _pageTitle;
         private ObservableCollection<FrameWidgetViewModel> _frames;
@@ -47,7 +52,12 @@ namespace OpenHab.UI.ViewModels
         private string _lastUpdateTime;
         private bool _isHomepage;
         private bool _isConnecting;
-        private const string DefaultFrameId = "__default_frame__";
+        private Sitemap _selectedSitemap;
+        private bool _showSitemapDialog;
+
+        private Page _currentPage;
+
+        #endregion
 
         public HubPageViewModel(
             ILogManager logManager,
@@ -68,20 +78,40 @@ namespace OpenHab.UI.ViewModels
             _promptService = promptService;
         }
 
+        #region Commands
+
         public ICommand ConnectCommand
         {
-            get { return (_connectCommand) ?? (_connectCommand = new DelegateCommand(LoadPage)); }
+            get { return (_connectCommand) ?? (_connectCommand = new DelegateCommand(ReloadPage)); }
         }
 
-        public ICommand SettingsCommand
+        public ICommand OpenSettingsCommand
         {
             get { return (_settingsCommand) ?? (_settingsCommand = new DelegateCommand(OpenSettingsPage)); }
         }
 
-        public object HomepageCommand
+        public ICommand OpenHomepageCommand
         {
             get { return (_homepageCommand) ?? (_homepageCommand = new DelegateCommand(OpenHomePage)); }
         }
+
+        public ICommand OpenSitemapDialogCommand
+        {
+            get { return (_openSitemapDialogCommand) ?? (_openSitemapDialogCommand = new DelegateCommand(() => LoadSitemaps(false))); }
+        }
+
+        public ICommand SitemapAcceptCommand
+        {
+            get { return (_sitemapAcceptCommand) ?? (_sitemapAcceptCommand = new DelegateCommand(AcceptSitemapDialog)); }
+        }
+        public ICommand SitemapCancelCommand
+        {
+            get { return (_sitemapCancelCommand) ?? (_sitemapCancelCommand = new DelegateCommand(CloseSitemapDialog)); }
+        }
+
+        #endregion
+
+        #region Properties
 
         public bool IsHomepage
         {
@@ -119,6 +149,22 @@ namespace OpenHab.UI.ViewModels
             private set { SetProperty(ref _frames, value); }
         }
 
+        public IEnumerable<Sitemap> Sitemaps { get; set; }
+
+        public Sitemap SelectedSitemap
+        {
+            get { return _selectedSitemap; }
+            set { SetProperty(ref _selectedSitemap, value); }
+        }
+
+        public bool ShowSitemapDialog
+        {
+            get { return _showSitemapDialog; }
+            private set { SetProperty(ref _showSitemapDialog, value); }
+        }
+
+        #endregion
+
         public override void OnNavigatedTo(object navigationParameter, NavigationMode navigationMode, Dictionary<string, object> viewModelState)
         {
             base.OnNavigatedTo(navigationParameter, navigationMode, viewModelState);
@@ -137,7 +183,7 @@ namespace OpenHab.UI.ViewModels
             }
             else
             {
-                LoadPage();
+                ReloadPage();
             }
         }
 
@@ -161,7 +207,7 @@ namespace OpenHab.UI.ViewModels
             _promptService.ShowNotification(e.Message, "");
 
             IsConnecting = false;
-            LoadPage();
+            ReloadPage();
         }
 
         private void OnDisconnected(OpenHabDisconnectedPayload e)
@@ -178,11 +224,34 @@ namespace OpenHab.UI.ViewModels
 
         private void OnSettingsChanged(Settings settings)
         {
-            LoadPage();
+            //LoadPage();
         }
 
+        private void ReloadPage()
+        {
+            _loadingCancellationTokenSource = new CancellationTokenSource();
 
-        private void LoadPage()
+            // it was already loaded
+            if (_currentPage != null)
+            {
+                LoadPage(_currentPage, false);
+            }
+            else // loading first time
+            {
+                if (IsHomepage)
+                {
+                    // this is Homepage so load sitemap list first
+                    LoadSitemaps(true);
+                }
+                else
+                {
+                    // it's regular page
+                    LoadPage(_parameters.Page, true);
+                }
+            }
+        }
+
+        private void LoadSitemaps(bool autoSelect)
         {
             var settings = _settingsManager.CurrentSettings;
             if (settings == null)
@@ -191,22 +260,10 @@ namespace OpenHab.UI.ViewModels
                 return;
             }
 
-            _loadingCancellationTokenSource = new CancellationTokenSource();
-
-            IsLoading = true;
-            if (!IsHomepage)
-            {
-                // it's regular page
-                ReloadPage(_parameters.Page);
-                return;
-            }
-
-            // this is Homepage so load sitemap list first
             Task.Run(() =>
             {
                 return _connectionTracker.Execute(async client =>
                     (await client.GetSitemaps(_loadingCancellationTokenSource.Token)).ToArray());
-
             }, _loadingCancellationTokenSource.Token)
                 .ContinueWith(
                     t =>
@@ -220,32 +277,47 @@ namespace OpenHab.UI.ViewModels
                             return;
                         }
 
-                        var sitemap = allSitemaps.FirstOrDefault(s => s.Name == settings.Sitemap);
-                        if (sitemap != null)
+                        if (autoSelect)
                         {
-                            // Found configured sitemap 
-                            ReloadPage(sitemap.Homepage);
-                            return;
-                        }
+                            var sitemap = allSitemaps.FirstOrDefault(s => s.Name == settings.Sitemap);
+                            if (sitemap != null)
+                            {
+                                // Found configured sitemap 
+                                LoadPage(sitemap.Homepage, true);
+                                return;
+                            }
 
-                        if (allSitemaps.Length == 1)
-                        {
-                            // Only one sitemap defined so use it
-                            sitemap = allSitemaps[0];
-                            ReloadPage(sitemap.Homepage);
-                            return;
+                            if (allSitemaps.Length == 1)
+                            {
+                                // Only one sitemap defined so use it
+                                sitemap = allSitemaps[0];
+                                LoadPage(sitemap.Homepage, true);
+                                return;
+                            }
                         }
 
 
                         // Need to show sitemap selection screen first
+                        Sitemaps = allSitemaps;
+                        SelectedSitemap = null;
+                        ShowSitemapDialog = true;
 
                     }, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
-        private void ReloadPage(Page page)
-        { 
+        private void LoadPage(Page page, bool reset)
+        {
+            _currentPage = page;
+
             Log.Debug("Loading page {0} from {1}", page.Id, page.Link);
 
+            if (reset)
+            {
+                PageTitle = null;
+                Frames = null;
+            }
+
+            IsLoading = true;
             Task.Run(() =>
             {
                 return _connectionTracker.Execute(client=> client.GetPage(page, _loadingCancellationTokenSource.Token));
@@ -269,6 +341,12 @@ namespace OpenHab.UI.ViewModels
         private void ProcessPage(SitemapPage page)
         {
             PageTitle = page.Title;
+
+            if (page.Widgets == null)
+            {
+                //TODO: show message that page is empty
+                return;
+            }
 
             var frameWidgets = page.Widgets.Where(w => w.Type == WidgetType.Frame).ToArray();
             var nonFrameWidgets = page.Widgets.Where(w => w.Type != WidgetType.Frame).ToArray();
@@ -351,6 +429,27 @@ namespace OpenHab.UI.ViewModels
         private void OpenHomePage()
         {
             _navigationService.Navigate(PageToken.Hub, new HubPageParameters{IsHomepage = true});
+        }
+
+        private void AcceptSitemapDialog()
+        {
+            if (SelectedSitemap != null)
+            {
+                var settings = _settingsManager.CurrentSettings;
+                settings.Sitemap = SelectedSitemap.Name;
+                _settingsManager.SaveSettings(settings);
+
+                LoadPage(SelectedSitemap.Homepage, true);
+            }
+
+            CloseSitemapDialog();
+        }
+
+        private void CloseSitemapDialog()
+        {
+            SelectedSitemap = null;
+            Sitemaps = null;
+            ShowSitemapDialog = false;
         }
     }
 }

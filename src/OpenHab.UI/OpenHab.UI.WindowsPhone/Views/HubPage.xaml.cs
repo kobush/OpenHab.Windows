@@ -1,4 +1,6 @@
-﻿using Windows.UI.Xaml.Controls;
+﻿using Windows.UI;
+using Windows.UI.ViewManagement;
+using Windows.UI.Xaml.Controls;
 using Microsoft.Practices.Prism.Mvvm;
 
 namespace OpenHab.UI.Views
@@ -8,6 +10,9 @@ namespace OpenHab.UI.Views
         public HubPage()
         {
             InitializeComponent();
+
+            //TODO: quick workaround - use theme color instead
+            StatusBar.GetForCurrentView().ForegroundColor = Colors.Black;
         }
     }
 }

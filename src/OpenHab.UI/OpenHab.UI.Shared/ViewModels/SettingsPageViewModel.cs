@@ -5,8 +5,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
-
+using Windows.Networking.Connectivity;
 using Windows.UI.Xaml.Navigation;
+using MetroLog;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Mvvm;
 using Microsoft.Practices.Prism.Mvvm.Interfaces;
@@ -19,6 +20,7 @@ namespace OpenHab.UI.ViewModels
 {
     public class SettingsPageViewModel : ViewModel
     {
+        private readonly ILogger Log;
         private readonly ISettingsManager _settingsManager;
         private readonly INavigationService _navigationService;
 
@@ -51,8 +53,11 @@ namespace OpenHab.UI.ViewModels
         private HostServiceViewModel _selectedHostService;
 
 
-        public SettingsPageViewModel(ISettingsManager settingsManager, INavigationService navigationService)
+        public SettingsPageViewModel(ILogManager logManager,
+            ISettingsManager settingsManager, INavigationService navigationService)
         {
+            Log = logManager.GetLogger<SettingsPageViewModel>();
+
             _settingsManager = settingsManager;
             _navigationService = navigationService;
         }
@@ -168,7 +173,11 @@ namespace OpenHab.UI.ViewModels
         public IEnumerable<HostServiceViewModel> DiscoveredServers
         {
             get { return _discoveredServers; }
-            private set { SetProperty(ref _discoveredServers, value); }
+            private set
+            {
+                if (SetProperty(ref _discoveredServers, value))
+                    _discoverAcceptCommand.RaiseCanExecuteChanged();
+            }
         }
 
         public HostServiceViewModel SelectedHostService
@@ -237,7 +246,7 @@ namespace OpenHab.UI.ViewModels
                 return; //todo: show validation message
 
             var settings = GetSettings();
-            var baseUri = settings.ResolveBaseUri();
+            var baseUri = settings.ResolveLocalUri();
 
             var client = new OpenHabRestClient(baseUri);
 
@@ -284,24 +293,36 @@ namespace OpenHab.UI.ViewModels
             return !IsConnecting;
         }
 
+        const string OpenHabHttpProtocol = "_openhab-server._tcp.local";
+        const string OpenHabHttpsProtocol = "_openhab-server-ssl._tcp.local";
 
         private void DiscoverServer()
         {
             CloseDiscoverDialog();
 
-            SelectedHostService = null;
-            DiscoveredServers = null;
-            DiscoverMessage = "Searching for openHAB services, please wait ...";
             ShowDiscoverDialog = true;
+            var connectionProfile = NetworkInformation.GetInternetConnectionProfile();
+            if (connectionProfile == null)
+            {
+                DiscoverMessage = "Network is not available.";
+                return;
+            }
+
+            if (connectionProfile.IsWlanConnectionProfile == false)
+            {
+                DiscoverMessage = "Auto-discovery is only supported on LAN networks. Make sure you are connected to your Wi-Fi network.";
+                return;
+            }
+
+            var names = connectionProfile.GetNetworkNames().ToArray();
+
+            DiscoverMessage = string.Format("Searching for openHAB services on network '{0}'. Please wait.", connectionProfile.ProfileName);
             IsSearching = true;
 
             _discoverCancellationTokenSource = new CancellationTokenSource();
 
-            const string httpProtocol = "_openhab-server._tcp.local";
-            const string httpsProtocol = "_openhab-server-ssl._tcp.local";
-
             // find services
-            Task.Run(() => ZeroconfResolver.ResolveAsync(new[] { httpProtocol, httpsProtocol }, 
+            Task.Run(() => ZeroconfResolver.ResolveAsync(new[] { OpenHabHttpProtocol, OpenHabHttpsProtocol }, 
                     scanTime: TimeSpan.FromSeconds(3),
                     cancellationToken: _discoverCancellationTokenSource.Token))
                 .ContinueWith(t =>
@@ -309,15 +330,20 @@ namespace OpenHab.UI.ViewModels
                     IsSearching = false;
 
                     if (t.IsCanceled)
+                    {
+                        Log.Debug("Server search canceled.");
                         return;
+                    }
 
                     if (t.IsFaulted)
-                        return;
+                    {
+                        Log.Warn("Error searching for servers", t.Exception);
+                    }
 
-                    if (t.Result.Count == 0)
+                    if (t.IsFaulted || t.Result.Count == 0)
                     {
                         DiscoverMessage =
-                            "No services found. Make sure UDP port 5353 is not blocked by server's firewall.";
+                            "No services found. Make sure you are connected to your LAN network, and that UDP port 5353 is not blocked by server's firewall.";
                     }
                     else
                     {
@@ -339,6 +365,9 @@ namespace OpenHab.UI.ViewModels
                 _discoverCancellationTokenSource = null;
             }
 
+            SelectedHostService = null;
+            DiscoveredServers = null;
+            IsSearching = false;
             ShowDiscoverDialog = false;
         }
 

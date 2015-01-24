@@ -102,7 +102,9 @@ namespace OpenHab.UI
             _container.RegisterInstance<IEventAggregator>(EventAggregator);
             //   _container.RegisterInstance<IResourceLoader>(new ResourceLoaderAdapter(new ResourceLoader()));
 
+            _container.RegisterType<IPromptService, PromptService>(new ContainerControlledLifetimeManager());
             _container.RegisterType<ISettingsManager, SettingsManager>(new ContainerControlledLifetimeManager());
+            _container.RegisterType<IConnectionTracker, ConnectionTracker>(new ContainerControlledLifetimeManager());
             _container.RegisterType<IWidgetViewModelFactory, WidgetViewModelFactory>(new ContainerControlledLifetimeManager());
 
             ViewModelLocationProvider.SetDefaultViewModelFactory(Resolve);

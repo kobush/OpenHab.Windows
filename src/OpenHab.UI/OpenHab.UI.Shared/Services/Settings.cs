@@ -6,7 +6,11 @@ namespace OpenHab.UI.Services
 {
     public class Settings
     {
+        public bool UseDemoMode { get; set; }
+
         public string Hostname { get; set; }
+
+        public string RemoteHostname { get; set; }
 
         public int? PortNumber { get; set; }
 
@@ -19,21 +23,54 @@ namespace OpenHab.UI.Services
         public string Sitemap { get; set; }
 
 
-        public Uri ResolveBaseUri()
+        public Uri ResolveLocalUri()
         {
-            var scheme = UseHttps ? "https" : "http";
-            UriBuilder builder;
-            if (PortNumber.HasValue)
-                builder = new UriBuilder(scheme, Hostname, PortNumber.Value);
-            else
-                builder = new UriBuilder(scheme, Hostname);
+            if (string.IsNullOrEmpty(Hostname))
+                return null;
 
-            return builder.Uri;
+            try
+            {
+                var scheme = UseHttps ? "https" : "http";
+                UriBuilder builder;
+                if (PortNumber.HasValue)
+                    builder = new UriBuilder(scheme, Hostname, PortNumber.Value);
+                else
+                    builder = new UriBuilder(scheme, Hostname);
+
+                return builder.Uri;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public Uri ResolveRemoteUrl()
+        {
+            if (string.IsNullOrEmpty(RemoteHostname))
+                return null;
+
+            try
+            {
+                var scheme = UseHttps ? "https" : "http";
+                UriBuilder builder;
+                if (PortNumber.HasValue)
+                    builder = new UriBuilder(scheme, RemoteHostname, PortNumber.Value);
+                else
+                    builder = new UriBuilder(scheme, RemoteHostname);
+
+                return builder.Uri;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public Uri ResolveIconUrl(string iconName)
         {
-            return new Uri(ResolveBaseUri(), string.Format("/images/{0}.png", iconName));
+            return new Uri(ResolveLocalUri(), string.Format("/images/{0}.png", iconName));
         }
+
     }
 }

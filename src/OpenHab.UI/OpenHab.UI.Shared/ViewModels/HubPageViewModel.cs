@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Windows.UI.Popups;
 using Windows.UI.Xaml.Navigation;
 using Microsoft.Practices.Prism.Commands;
 using Microsoft.Practices.Prism.Mvvm;
@@ -24,9 +26,11 @@ namespace OpenHab.UI.ViewModels
     public class HubPageViewModel : ViewModel
     {
         private readonly ISettingsManager _settingsManager;
+        private readonly IConnectionTracker _connectionTracker;
         private readonly INavigationService _navigationService;
         private readonly IWidgetViewModelFactory _widgetViewModelFactory;
         private readonly IEventAggregator _eventAggregator;
+        private readonly IPromptService _promptService;
 
         private DelegateCommand _connectCommand;
         private DelegateCommand _settingsCommand;
@@ -39,18 +43,23 @@ namespace OpenHab.UI.ViewModels
         private bool _isLoading;
         private string _lastUpdateTime;
         private bool _isHomepage;
+        private bool _isConnecting;
         private const string DefaultFrameId = "__default_frame__";
 
         public HubPageViewModel(
             ISettingsManager settingsManager,
+            IConnectionTracker connectionTracker,
             INavigationService navigationService,
             IWidgetViewModelFactory widgetViewModelFactory,
-            IEventAggregator eventAggregator)
+            IEventAggregator eventAggregator,
+            IPromptService promptService)
         {
             _settingsManager = settingsManager;
+            _connectionTracker = connectionTracker;
             _navigationService = navigationService;
             _widgetViewModelFactory = widgetViewModelFactory;
             _eventAggregator = eventAggregator;
+            _promptService = promptService;
         }
 
         public ICommand ConnectCommand
@@ -85,6 +94,12 @@ namespace OpenHab.UI.ViewModels
             protected set { SetProperty(ref _isLoading, value); }
         }
 
+        public bool IsConnecting
+        {
+            get { return _isConnecting; }
+            private set { SetProperty(ref _isConnecting, value); }
+        }
+
         public string LastUpdateTime
         {
             get { return _lastUpdateTime; }
@@ -106,7 +121,39 @@ namespace OpenHab.UI.ViewModels
 
             _eventAggregator.GetEvent<SettingsChangedEvent>()
                 .Subscribe(OnSettingsChanged, ThreadOption.UIThread, false);
+            _eventAggregator.GetEvent<OpenHabConnected>()
+                .Subscribe(OnConnected, ThreadOption.UIThread, false);
+            _eventAggregator.GetEvent<OpenHabDisconnected>()
+                .Subscribe(OnDisconnected, ThreadOption.UIThread, false);
 
+            if (!_connectionTracker.IsConnected)
+            {
+                IsConnecting = true;
+                _connectionTracker.CheckConnectionAsync();
+            }
+            else
+            {
+                LoadPage();
+            }
+        }
+
+        private void OnDisconnected(OpenHabDisconnectedPayload e)
+        {
+            IsConnecting = false;
+
+            _promptService.ShowError("Disconnected", e.Message,
+                new[]
+                {
+                    new UICommand("Close"),
+                    new UICommand("Settings", c => OpenSettingsPage())
+                });
+        }
+
+        private void OnConnected(OpenHabConnectedPayload e)
+        {
+            _promptService.ShowNotification(e.Message, "");
+
+            IsConnecting = false;
             LoadPage();
         }
 
@@ -139,7 +186,7 @@ namespace OpenHab.UI.ViewModels
                 return;
             }
 
-            var baseUri = settings.ResolveBaseUri();
+            var baseUri = settings.ResolveLocalUri();
             var client = new OpenHabRestClient(baseUri);
 
             _loadingCancellationTokenSource = new CancellationTokenSource();

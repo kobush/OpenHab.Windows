@@ -23,6 +23,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\HubBinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\NotNullToVisibilityConverter.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helpers\StringFormatConverter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\ConnectionTracker.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\IConnectionTracker.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Services\PromptService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Settings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SettingsManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\ChartWidgetViewModel.cs" />

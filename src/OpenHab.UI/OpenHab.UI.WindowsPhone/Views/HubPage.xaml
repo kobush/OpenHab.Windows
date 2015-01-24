@@ -355,7 +355,9 @@
     </Page.Resources>
     
     <Page.BottomAppBar>
-        <CommandBar>
+        <CommandBar 
+            Visibility="{Binding IsConnecting, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+            
             <CommandBar.PrimaryCommands>
 
                 <AppBarButton Command="{Binding HomepageCommand}" 
@@ -385,12 +387,20 @@
         
 
         <Hub x:Name="Hub" x:Uid="Hub" 
+             Visibility="{Binding IsConnecting, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
              Header="{Binding PageTitle, Converter={StaticResource LowerCaseConverter}}"
              helpers:HubBinder.DataSource="{Binding Frames}"
              helpers:HubBinder.HeaderTemplate="{StaticResource HubHeaderTemplate}"
              helpers:HubBinder.SectionTemplate="{StaticResource HubSectionTemplate}">
             
         </Hub>
+        
+        <StackPanel Orientation="Vertical"
+                    HorizontalAlignment="Center" VerticalAlignment="Center"
+                    Visibility="{Binding IsConnecting, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <TextBlock TextAlignment="Center" Style="{ThemeResource BaseTextBlockStyle}" Margin="0,0,0,10">Connecting to openHAB</TextBlock>
+            <ProgressRing IsActive="{Binding IsConnecting}"/>
+        </StackPanel>
         
         <TextBlock Opacity="0.8" IsHitTestVisible="False" Text="{Binding LastUpdateTime}" VerticalAlignment="Bottom" Margin="12" TextAlignment="Right"/>
     </Grid>

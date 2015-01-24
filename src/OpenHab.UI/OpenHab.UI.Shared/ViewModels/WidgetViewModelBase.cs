@@ -176,7 +176,7 @@ namespace OpenHab.UI.ViewModels
         protected void SendItemCommand(string command)
         {
             var settings = SettingsManager.CurrentSettings;
-            var baseUri = settings.ResolveBaseUri();
+            var baseUri = settings.ResolveLocalUri();
             var client = new OpenHabRestClient(baseUri);
 
             if (_widget.Item == null)

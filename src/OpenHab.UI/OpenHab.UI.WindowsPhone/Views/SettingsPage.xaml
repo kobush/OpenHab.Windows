@@ -44,7 +44,7 @@
                          IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
                          Text="{Binding Hostname, Mode=TwoWay}"/>
                 
-                <TextBox Header="PortNumber number (e.g. 8080)" 
+                <TextBox Header="Port number (e.g. 8080)" 
                          PlaceholderText="Enter port number" InputScope="Number" MaxLength="10"
                          IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
                          Text="{Binding PortNumber, Mode=TwoWay}"/>

@@ -39,6 +39,7 @@
     <TargetPlatform Include="Windows, Version=8.1" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IHttpClientFactory.cs" />
     <Compile Include="Page.cs" />
     <Compile Include="Item.cs" />
     <Compile Include="ItemType.cs" />

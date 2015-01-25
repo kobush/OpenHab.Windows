@@ -278,6 +278,16 @@ namespace OpenHab.UI.ViewModels
                 .ContinueWith(
                     t =>
                     {
+                        if (t.IsCanceled)
+                            return;
+
+                        if (t.IsFaulted)
+                        {
+                            Log.Error("Error loading sitemaps", t.Exception);
+                            ShowConnectionError();
+                            return;
+                        }
+
                         Sitemap[] allSitemaps = t.Result;
 
                         if (allSitemaps.Length == 0)
@@ -345,18 +355,21 @@ namespace OpenHab.UI.ViewModels
 
                 if (t.IsFaulted)
                 {
-                    Log.Warn("Error loading page", t.Exception);
-
-                    _promptService.ShowError("Ooops", 
-                        "Something went wrong. Please check your settings and try again.",
-                        new[] {new UICommand("Close"), new UICommand("Retry", c => ReloadPage())});
-
+                    Log.Error("Error loading page", t.Exception);
+                    ShowConnectionError();
                     return;
                 }
 
                 ProcessPage(t.Result);
 
             }, TaskScheduler.FromCurrentSynchronizationContext());
+        }
+
+        private void ShowConnectionError()
+        {
+            _promptService.ShowError("Ooops",
+                "Something went wrong. Please check your settings and try again.",
+                new[] {new UICommand("Close"), new UICommand("Retry", c => ReloadPage())});
         }
 
         private void ProcessPage(SitemapPage page)

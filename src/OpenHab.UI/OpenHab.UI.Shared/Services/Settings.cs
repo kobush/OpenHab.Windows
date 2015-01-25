@@ -6,7 +6,7 @@ namespace OpenHab.UI.Services
 {
     public class Settings
     {
-        public bool UseDemoMode { get; set; }
+        public bool DemoMode { get; set; }
 
         public string Hostname { get; set; }
 
@@ -21,6 +21,8 @@ namespace OpenHab.UI.Services
         public string Password { get; set; }
 
         public string Sitemap { get; set; }
+        
+        public bool	 IgnoreSslErrors { get; set; }
 
 
         public Uri ResolveLocalUri()

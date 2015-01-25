@@ -1,21 +1,15 @@
 ﻿using System;
 using Windows.Security.Credentials;
 using Windows.Storage;
+using MetroLog;
 using Microsoft.Practices.Prism.PubSubEvents;
 
 namespace OpenHab.UI.Services
 {
-    public interface ISettingsManager
-    {
-        Settings LoadSettings();
-
-        void SaveSettings(Settings settings);
-
-        Settings CurrentSettings { get; }
-    }
-
     public class SettingsManager : ISettingsManager
     {
+        private readonly ILogger Log;
+
         private readonly IEventAggregator _eventAggregator;
         private readonly ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
         private readonly PasswordVault _passwordVault = new PasswordVault();
@@ -24,8 +18,9 @@ namespace OpenHab.UI.Services
 
         private const string DefaultContainerKey = "defaultSettings";
 
-        public SettingsManager(IEventAggregator eventAggregator)
+        public SettingsManager(ILogManager logManager, IEventAggregator eventAggregator)
         {
+            Log = logManager.GetLogger<SettingsManager>();
             _eventAggregator = eventAggregator;
         }
 
@@ -43,6 +38,7 @@ namespace OpenHab.UI.Services
             {
                 if (!_localSettings.Containers.ContainsKey(DefaultContainerKey))
                 {
+                    Log.Debug("Settings container not found");
                     return null;
                 }
 
@@ -50,7 +46,9 @@ namespace OpenHab.UI.Services
                 var container = _localSettings.Containers[DefaultContainerKey];
 
                 var settings = new Settings();
+                settings.DemoMode = (bool)container.Values["demoMode"];
                 settings.Hostname = (string)container.Values["hostname"];
+                settings.RemoteHostname = (string)container.Values["altHostname"];
                 settings.PortNumber = (int) container.Values["port"];
                 settings.Sitemap = (string) container.Values["sitemap"];
                 settings.UseHttps = (bool) container.Values["useHttps"];
@@ -66,11 +64,13 @@ namespace OpenHab.UI.Services
                     }
                 }
 
+                Log.Debug("Loaded settings");
+
                 return settings;
             }
             catch (Exception ex)
             {
-                //TODO: add logging
+                Log.Error("Error loading settings", ex);
             }
             return null;
         }
@@ -79,15 +79,16 @@ namespace OpenHab.UI.Services
         {
             try
             {
-                var container = _localSettings.CreateContainer(DefaultContainerKey,
-                    ApplicationDataCreateDisposition.Always);
+                var container = _localSettings.CreateContainer(DefaultContainerKey, ApplicationDataCreateDisposition.Always);
 
+                container.Values["demoMode"] = settings.DemoMode;
                 container.Values["hostname"] = settings.Hostname;
+                container.Values["altHostname"] = settings.RemoteHostname;
                 container.Values["port"] = settings.PortNumber;
                 container.Values["sitemap"] = settings.Sitemap;
                 container.Values["useHttps"] = settings.UseHttps;
-
                 container.Values["username"] = settings.Username;
+
                 if (!string.IsNullOrEmpty(settings.Username) && !string.IsNullOrEmpty(settings.Password))
                 {
                     try
@@ -96,15 +97,20 @@ namespace OpenHab.UI.Services
                     }
                     catch (Exception ex)
                     {
-                        //TODO: handle
+                        Log.Error("Error saving password", ex);
+                        return;
                     }
                 }
+
+                Log.Debug("Saved settings");
+
+                _currentSettings = settings;
 
                 _eventAggregator.GetEvent<SettingsChangedEvent>().Publish(settings);
             }
             catch (Exception ex)
             {
-                //TODO: log
+                Log.Error("Error saving settings", ex);
             }
         }
 

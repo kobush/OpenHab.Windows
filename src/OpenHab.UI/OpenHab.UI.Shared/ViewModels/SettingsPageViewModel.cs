@@ -51,6 +51,8 @@ namespace OpenHab.UI.ViewModels
         private bool _showDiscoverDialog;
         private IEnumerable<HostServiceViewModel> _discoveredServers;
         private HostServiceViewModel _selectedHostService;
+        private string _remoteHostname;
+        private bool _demoMode;
 
 
         public SettingsPageViewModel(ILogManager logManager,
@@ -86,10 +88,22 @@ namespace OpenHab.UI.ViewModels
             get { return (_discoverAcceptCommand) ?? (_discoverAcceptCommand = new DelegateCommand(AcceptDiscoverServer, CanAcceptDiscoverServer)); }
         }
 
+        public bool DemoMode
+        {
+            get { return _demoMode; }
+            set { SetProperty(ref _demoMode, value); }
+        }
+
         public string Hostname
         {
             get { return _hostname; }
             set { SetProperty(ref _hostname, value); }
+        }
+
+        public string RemoteHostname
+        {
+            get { return _remoteHostname; }
+            set { SetProperty(ref _remoteHostname, value); }
         }
 
         public string PortNumber
@@ -200,7 +214,9 @@ namespace OpenHab.UI.ViewModels
             _lastSettings = _settingsManager.LoadSettings();
             if (_lastSettings != null)
             {
+                DemoMode = _lastSettings.DemoMode;
                 Hostname = _lastSettings.Hostname;
+                RemoteHostname = _lastSettings.RemoteHostname;
                 PortNumber = _lastSettings.PortNumber != null ? _lastSettings.PortNumber.ToString() : "";
                 UseHttps = _lastSettings.UseHttps;
 
@@ -234,7 +250,9 @@ namespace OpenHab.UI.ViewModels
         private Settings GetSettings()
         {
             var settings = new Settings();
+            settings.DemoMode = DemoMode;
             settings.Hostname = Hostname;
+            settings.RemoteHostname = RemoteHostname;
             settings.PortNumber = !string.IsNullOrEmpty(PortNumber) ? Convert.ToInt32(PortNumber) : (int?) null;
             settings.UseHttps = UseHttps;
             return settings;
@@ -276,16 +294,20 @@ namespace OpenHab.UI.ViewModels
 
         private void SaveSettings()
         {
-            var settings = GetSettings();
-
-            _settingsManager.SaveSettings(settings);
-
-            //TODO: broadcast settings changed
+            try
+            {
+                var settings = GetSettings();
+                _settingsManager.SaveSettings(settings);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Error saving settings", ex);
+            }
 
             if (_navigationService.CanGoBack())
                 _navigationService.GoBack();
             else
-                _navigationService.Navigate("Hub", new HubPageParameters {IsHomepage = true});
+                _navigationService.Navigate(PageToken.Hub, new HubPageParameters {IsHomepage = true});
         }
 
         private bool CanExecuteDiscoverServer()
@@ -383,6 +405,7 @@ namespace OpenHab.UI.ViewModels
         {
             if (SelectedHostService != null)
             {
+                DemoMode = false;
                 Hostname = SelectedHostService.IPAddress;
                 PortNumber = SelectedHostService.PortNumber.ToString();
                 UseHttps = SelectedHostService.ServiceName.Contains("ssl");

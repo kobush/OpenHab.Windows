@@ -39,51 +39,66 @@
                       VerticalScrollBarVisibility="Auto">
 
             <StackPanel >
-                <TextBox Header="Hostname or IP address" 
-                         PlaceholderText="Enter hostname" InputScope="Url" MaxLength="100"
-                         IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
-                         Text="{Binding Hostname, Mode=TwoWay}"/>
-                
-                <TextBox Header="Port number (e.g. 8080)" 
-                         PlaceholderText="Enter port number" InputScope="Number" MaxLength="10"
-                         IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
-                         Text="{Binding PortNumber, Mode=TwoWay}"/>
-
-                <ToggleSwitch x:Name="UseAuthenticationSwitch" 
-                              Header="Use authentication" 
+                <ToggleSwitch Header="Demo mode" 
                               OnContent="On" OffContent="Off"
                               IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
-                              IsOn="{Binding UseAuthentication, Mode=TwoWay}"/>
+                              IsOn="{Binding DemoMode, Mode=TwoWay}" />
+
+                <TextBlock Style="{ThemeResource BodyTextBlockStyle}" TextWrapping="WrapWholeWords" Text="App will connect to demo.openhab.org."
+                           Visibility="{Binding DemoMode, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                 
-                <TextBox Header="User name" PlaceholderText="Enter user name" 
-                         Text="{Binding Username, Mode=TwoWay}" MaxLength="100"
-                         IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
-                         Visibility="{Binding UseAuthentication, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                <StackPanel Visibility="{Binding DemoMode, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                    
+                    <TextBox Header="Hostname or IP address (required)" 
+                             PlaceholderText="Enter hostname" InputScope="Url" MaxLength="100"
+                             IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
+                             Text="{Binding Hostname, Mode=TwoWay}"/>
+
+                    <TextBox Header="Remote hostname or IP address (optional)" 
+                             PlaceholderText="Enter remote hostname" InputScope="Url" MaxLength="100"
+                             IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
+                             Text="{Binding RemoteHostname, Mode=TwoWay}"/>
                 
-                <PasswordBox Header="Password" PlaceholderText="Enter password" 
-                             Password="{Binding Password, Mode=TwoWay}" MaxLength="100"
+                    <TextBox Header="Port number (e.g. 8080)" 
+                             PlaceholderText="Enter port number" InputScope="Number" MaxLength="10"
+                             IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
+                             Text="{Binding PortNumber, Mode=TwoWay}"/>
+
+                    <ToggleSwitch Header="Use authentication" 
+                                  OnContent="On" OffContent="Off"
+                                  IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
+                                  IsOn="{Binding UseAuthentication, Mode=TwoWay}"/>
+                
+                    <TextBox Header="User name" PlaceholderText="Enter user name" 
+                             Text="{Binding Username, Mode=TwoWay}" MaxLength="100"
                              IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
                              Visibility="{Binding UseAuthentication, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                
+                    <PasswordBox Header="Password" PlaceholderText="Enter password" 
+                                 Password="{Binding Password, Mode=TwoWay}" MaxLength="100"
+                                 IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"
+                                 Visibility="{Binding UseAuthentication, Converter={StaticResource BooleanToVisibilityConverter}}"/>
 
-                <ToggleSwitch Header="Connection type" OnContent="HTTPS" OffContent="HTTP"
-                              IsOn="{Binding UseHttps, Mode=TwoWay}"
-                              IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"/>
+                    <ToggleSwitch Header="Connection type" OnContent="HTTPS" OffContent="HTTP"
+                                  IsOn="{Binding UseHttps, Mode=TwoWay}"
+                                  IsEnabled="{Binding IsConnecting, Converter={StaticResource BooleanInverseConverter}}"/>
 
-                <StackPanel Orientation="Horizontal">
-                    <Button Content="connect" Command="{Binding TestConnectionCommand}" />
-                    <TextBlock Text="{Binding ConnectionMessage}" 
-                               Margin="12,11,0,12" VerticalAlignment="Center"
-                               Style="{StaticResource BodyTextBlockStyle}" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="connect" Command="{Binding TestConnectionCommand}" />
+                        <TextBlock Text="{Binding ConnectionMessage}" 
+                                   Margin="12,11,0,12" VerticalAlignment="Center"
+                                   Style="{StaticResource BodyTextBlockStyle}" />
+                    </StackPanel>
+                
+                    <ProgressBar IsIndeterminate="{Binding IsConnecting}" 
+                                 Visibility="{Binding IsConnecting, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+                    <!--<ComboBox Header="Sitemap" PlaceholderText="Select sitemap" 
+                              ItemsSource="{Binding Sitemaps}" DisplayMemberPath="Name" 
+                              SelectedValue="{Binding Sitemap, Mode=TwoWay}"
+                              SelectedValuePath="Name"/>-->
+
                 </StackPanel>
-                
-                <ProgressBar IsIndeterminate="{Binding IsConnecting}" 
-                             Visibility="{Binding IsConnecting, Converter={StaticResource BooleanToVisibilityConverter}}" />
-
-                <!--<ComboBox Header="Sitemap" PlaceholderText="Select sitemap" 
-                          ItemsSource="{Binding Sitemaps}" DisplayMemberPath="Name" 
-                          SelectedValue="{Binding Sitemap, Mode=TwoWay}"
-                          SelectedValuePath="Name"/>-->
-                
             </StackPanel>
 
         </ScrollViewer>

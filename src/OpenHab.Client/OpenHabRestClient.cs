@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Security.Cryptography.Certificates;
+using Windows.Web.Http;
+using Windows.Web.Http.Filters;
+using Windows.Web.Http.Headers;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding;
 
 namespace OpenHab.Client
 {
@@ -27,17 +31,17 @@ namespace OpenHab.Client
 
         private HttpClient GetWebClient()
         {
-            var httpClientHandler = new HttpClientHandler();
+            var filter = new HttpBaseProtocolFilter();
+            //filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.Untrusted); - not needed when cert is installed
+            filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.InvalidName);
 
-            var httpClient = new HttpClient(httpClientHandler);
-            httpClient.BaseAddress = _baseUri;
-
+            var httpClient = new HttpClient(filter);
 
             // Add an Accept header for JSON format.
-            httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            httpClient.DefaultRequestHeaders.Accept.Add(new HttpMediaTypeWithQualityHeaderValue("application/json"));
 
             // Add an Charset header for Unicode.
-            httpClient.DefaultRequestHeaders.AcceptCharset.Add(new StringWithQualityHeaderValue("utf-8"));
+            httpClient.DefaultRequestHeaders.Add("Accept-Charset", "utf-8");
 
             return httpClient;
         }
@@ -65,24 +69,23 @@ namespace OpenHab.Client
 
         private async Task<T> MakeGetRequest<T>(string requestUri, CancellationToken cancellationToken)
         {
+            var query = GetDefaultQueryString();
+
+            if (query.Any())
+            {
+                if (!requestUri.EndsWith("?"))
+                    requestUri += "?";
+                requestUri = requestUri + FormatAsQueryString(query);
+            } 
+
+            var request = new HttpRequestMessage(HttpMethod.Get, new Uri(_baseUri, requestUri));
+
             try
             {
                 using (var client = GetWebClient())
                 {
-                    var query = GetDefaultQueryString();
 
-                    /*if (appendQuery != null)
-                        appendQuery(query);*/
-
-                    if (query.Any())
-                    {
-                        if (!requestUri.EndsWith("?"))
-                            requestUri += "?";
-                        requestUri = requestUri + FormatAsQueryString(query);
-                    }
-
-                    // make request
-                    var response = await client.GetAsync(requestUri, cancellationToken);
+                    var response = await client.SendRequestAsync(request).AsTask(cancellationToken);
                     if (!response.IsSuccessStatusCode)
                     {
                         try
@@ -98,11 +101,18 @@ namespace OpenHab.Client
                         throw new Exception("Request failed with status code " + response.StatusCode);
                     }
 
-                    return await response.Content.ReadAsAsync<T>(cancellationToken);
+                    var json = await response.Content.ReadAsStringAsync().AsTask(cancellationToken);
+                    return JsonConvert.DeserializeObject<T>(json);
                 }
             }
             catch (Exception ex)
             {
+                if ((ex.HResult & 65535) == 12045)
+                {
+                    // Get a list of the server cert errors
+                    IReadOnlyList<ChainValidationResult> errors = request.TransportInformation.ServerCertificateErrors;
+                }
+
                 throw new Exception("Request failed", ex);
             }
         }
@@ -113,9 +123,9 @@ namespace OpenHab.Client
             {
                 using (var client = GetWebClient())
                 {
-                    HttpContent httpContent = new StringContent(content, Encoding.UTF8, "text/plain");
+                    IHttpContent httpContent = new HttpStringContent(content, UnicodeEncoding.Utf8, "text/plain");
 
-                    var response = await client.PutAsync(requestUri, httpContent, cancellationToken);
+                    var response = await client.PutAsync(new Uri(_baseUri, requestUri), httpContent).AsTask(cancellationToken);
                     if (!response.IsSuccessStatusCode)
                     {
                         throw new Exception("PUT request failed with status code " + response.StatusCode);
@@ -136,9 +146,9 @@ namespace OpenHab.Client
             {
                 using (var client = GetWebClient())
                 {
-                    HttpContent httpContent = new StringContent(command, Encoding.UTF8, "text/plain");
+                    IHttpContent httpContent = new HttpStringContent(command, UnicodeEncoding.Utf8, "text/plain");
 
-                    var httpResponse = await client.PostAsync(requestUri, httpContent, cancellationToken);
+                    var httpResponse = await client.PostAsync(new Uri(_baseUri,  requestUri), httpContent).AsTask(cancellationToken);
                     if (!httpResponse.IsSuccessStatusCode)
                     {
                         var msg = string.Format("POST request failed with status code {0}", httpResponse.StatusCode);

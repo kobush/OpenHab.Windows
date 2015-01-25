@@ -229,6 +229,13 @@ namespace OpenHab.UI.ViewModels
 
         private void ReloadPage()
         {
+            if (_connectionTracker.IsConnected == false && IsConnecting == false)
+            {
+                IsConnecting = true;
+                _connectionTracker.CheckConnectionAsync();
+                return;
+            }
+
             _loadingCancellationTokenSource = new CancellationTokenSource();
 
             // it was already loaded
@@ -253,6 +260,9 @@ namespace OpenHab.UI.ViewModels
 
         private void LoadSitemaps(bool autoSelect)
         {
+            if (_connectionTracker.IsConnected == false)
+                return;
+
             var settings = _settingsManager.CurrentSettings;
             if (settings == null)
             {
@@ -272,8 +282,7 @@ namespace OpenHab.UI.ViewModels
 
                         if (allSitemaps.Length == 0)
                         {
-                            _promptService.ShowError("No sitemap", "openHAB doesn't have any sitemaps configured",
-                                null);
+                            _promptService.ShowError("No sitemap", "openHAB doesn't have any sitemaps configured", null);
                             return;
                         }
 
@@ -309,7 +318,10 @@ namespace OpenHab.UI.ViewModels
         {
             _currentPage = page;
 
-            Log.Debug("Loading page {0} from {1}", page.Id, page.Link);
+            if (_connectionTracker.IsConnected == false)
+                return;
+
+            Log.Debug("Loading page '{0}' from {1}", page.Id, page.Link);
 
             if (reset)
             {
@@ -330,9 +342,18 @@ namespace OpenHab.UI.ViewModels
 
                 if (t.IsCanceled)
                     return;
+
                 if (t.IsFaulted)
+                {
+                    Log.Warn("Error loading page", t.Exception);
+
+                    _promptService.ShowError("Ooops", 
+                        "Something went wrong. Please check your settings and try again.",
+                        new[] {new UICommand("Close"), new UICommand("Retry", c => ReloadPage())});
+
                     return;
-                
+                }
+
                 ProcessPage(t.Result);
 
             }, TaskScheduler.FromCurrentSynchronizationContext());

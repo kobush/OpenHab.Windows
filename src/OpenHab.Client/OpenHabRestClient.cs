@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
+using Windows.Storage.Streams;
 using Windows.Web.Http;
 using Windows.Web.Http.Filters;
 using Windows.Web.Http.Headers;
@@ -88,20 +90,11 @@ namespace OpenHab.Client
                     var response = await client.SendRequestAsync(request).AsTask(cancellationToken);
                     if (!response.IsSuccessStatusCode)
                     {
-                        try
-                        {
-                            // try to parse error message from response body
-                           /* var errorResponse = await response.Content.ReadAsAsync<ErrorResponse>(cancellationToken);
-                            if (errorResponse != null && !string.IsNullOrEmpty(errorResponse.Error))
-                                throw new Exception(errorResponse.Error);*/
-                        }
-                        catch (Exception)
-                        { }
-
-                        throw new Exception("Request failed with status code " + response.StatusCode);
+                        throw new Exception("GET request failed with status code " + response.StatusCode);
                     }
 
-                    var json = await response.Content.ReadAsStringAsync().AsTask(cancellationToken);
+                    // ensure content is parsed using UTF8
+                    var json = await ReadAsStringWithEncoding(response.Content, Encoding.UTF8,  cancellationToken);
                     return JsonConvert.DeserializeObject<T>(json);
                 }
             }
@@ -111,10 +104,20 @@ namespace OpenHab.Client
                 {
                     // Get a list of the server cert errors
                     IReadOnlyList<ChainValidationResult> errors = request.TransportInformation.ServerCertificateErrors;
+                    //TODO: log SSL errors
                 }
 
-                throw new Exception("Request failed", ex);
+                throw new Exception("GET request failed", ex);
             }
+        }
+
+        private static async Task<string> ReadAsStringWithEncoding(IHttpContent content, Encoding encoding, CancellationToken cancellationToken)
+        {
+            IBuffer buffer = await content.ReadAsBufferAsync().AsTask(cancellationToken);
+            byte[] bytes = new byte[buffer.Length];
+            buffer.CopyTo(bytes);
+
+            return encoding.GetString(bytes, 0, bytes.Length);
         }
 
         private async Task MakePutRequest(string requestUri, string content, CancellationToken cancellationToken)

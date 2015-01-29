@@ -29,7 +29,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Services\PromptService.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\Settings.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Services\SettingsManager.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Services\WinRtHttpClientFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\HubPageViewModel.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\PageToken.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ViewModels\SettingsPageViewModel.cs" />

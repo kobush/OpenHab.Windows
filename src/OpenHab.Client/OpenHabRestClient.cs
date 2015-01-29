@@ -95,6 +95,10 @@ namespace OpenHab.Client
 
                     // ensure content is parsed using UTF8
                     var json = await ReadAsStringWithEncoding(response.Content, Encoding.UTF8,  cancellationToken);
+                    if (string.IsNullOrEmpty(json)) 
+                        return default(T);
+
+                    // deserialize JSON
                     return JsonConvert.DeserializeObject<T>(json);
                 }
             }
@@ -114,9 +118,11 @@ namespace OpenHab.Client
         private static async Task<string> ReadAsStringWithEncoding(IHttpContent content, Encoding encoding, CancellationToken cancellationToken)
         {
             IBuffer buffer = await content.ReadAsBufferAsync().AsTask(cancellationToken);
+            if (buffer == null || buffer.Length == 0)
+                return "";
+                
             byte[] bytes = new byte[buffer.Length];
             buffer.CopyTo(bytes);
-
             return encoding.GetString(bytes, 0, bytes.Length);
         }
 

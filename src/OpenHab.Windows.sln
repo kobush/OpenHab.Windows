@@ -13,6 +13,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenHab.UI.WindowsPhone", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenHab.Client", "OpenHab.Client\OpenHab.Client.csproj", "{A67445C8-B036-48D2-9FD6-88148F96859E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{395F6C70-1BA8-4B58-A4CC-C21154FE3392}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		OpenHab.UI\OpenHab.UI.Shared\OpenHab.UI.Shared.projitems*{3085de7a-f99d-4d6b-8609-080e7dfe0e9d}*SharedItemsImports = 13
